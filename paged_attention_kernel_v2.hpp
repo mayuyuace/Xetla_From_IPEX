@@ -423,7 +423,7 @@ class paged_attention_kernel {
 
     inline void init(sycl::nd_item<3>& item, arguments_t& args) {
       sg_id = item.get_local_linear_id();
-      head_id = item.get_group(0);
+      kv_head_id = item.get_group(0);
       seq_id = item.get_group(1);
       partition_id = item.get_group(2);
       max_num_partitions = item.get_group_range(2);
@@ -436,8 +436,7 @@ class paged_attention_kernel {
       block_table = args.block_tables + seq_id * args.max_blocks_per_seq;
       num_blocks_per_sg = 0;
 
-      //   const int kv_head_id = args.head_mapping[head_id];
-      kv_head_id = head_id / args.num_queries_per_tokens;
+      head_id = kv_head_id * query_group_size;
       kv_block_stride = args.num_kv_heads * args.head_size * block_size;
       kv_head_stride = args.head_size * kv_head_id;
 
@@ -599,12 +598,14 @@ class paged_attention_kernel {
       uint32_t boundary_query_x = args.head_size;
       auto* cur_query = args.query + ctx.seq_id * args.num_heads * args.head_size + 
           ctx.kv_head_id * query_group_size * args.head_size;
-
+      
       query_payload_t query_payload(
           cur_query, boundary_query_x, boundary_query_y, max_head_size, 0, 0);
       
-      uint32_t boundary_score_y = query_group_size;
-      sycl::ext::oneapi::experimental::printf("sg_id : %d\n", ctx.sg_id);
+
+      uint32_t start_score_y = ctx.kv_head_id * query_group_size;
+      uint32_t boundary_score_y = start_score_y + query_group_size;
+      /* sycl::ext::oneapi::experimental::printf("sg_id : %d\n", ctx.sg_id); */
       uint32_t start_score_x = ctx.sg_id * block_size;
       uint32_t boundary_score_x = start_score_x + block_size;
 
@@ -615,7 +616,7 @@ class paged_attention_kernel {
           boundary_score_y,
           partition_size,
           start_score_x,
-          0);
+          start_score_y);
 
 
 #pragma unroll
@@ -946,13 +947,6 @@ class paged_attention_kernel {
     static const sycl::range<3> local_range = sycl::range<3>{1, 1, wg_size};
     sycl::range<3> group_range =
         sycl::range<3>{num_kv_heads, num_seqs, max_num_partitions};
-    printf("local_range: %zu, %zu, %zu\n group_range: %zu, %zu, %zu\n",
-           local_range[0],
-           local_range[1],
-           local_range[2],
-           group_range[0],
-           group_range[1],
-           group_range[2]);
     return sycl::nd_range<3>{group_range * local_range, local_range};
   };
 
@@ -962,7 +956,7 @@ class paged_attention_kernel {
       arguments_t& args) {
     // initialization
 
-    sycl::ext::oneapi::experimental::printf("sg_id : %d\n", item.get_local_linear_id());
+    /* sycl::ext::oneapi::experimental::printf("sg_id : %d\n", item.get_local_linear_id()); */
     ctx.init(item, args);
     if (use_partition && ctx.start_block_id >= ctx.end_block_id) {
       return;
