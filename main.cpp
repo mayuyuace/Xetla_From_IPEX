@@ -22,7 +22,7 @@ constexpr uint32_t num_kv_heads = 2;
 
 using namespace at;
 using namespace gpu::xetla::attention;
-using namespace torch::indexing;  // important for Slice, None, Ellipsis, etc.
+using namespace torch::indexing; // important for Slice, None, Ellipsis, etc.
 
 #include <iostream>
 #include <torch/torch.h>
@@ -96,15 +96,16 @@ inline XetlaType aten_to_Xetla_dtype(const Tensor &input) {
 }
 
 void init_query(torch::Tensor &query) {
-  auto num_heads = query.size(1);
-  for (int i = 0; i < num_heads; i++) {
-    query[0][i].fill_(i + 1);
-  }
+  // auto num_heads = query.size(1);
+  // for (int i = 0; i < num_heads; i++) {
+  //   query[0][i].fill_(i + 1);
+  // }
+  query.normal_(0.0, 1.0);
 }
 
-torch::Tensor ref_compute_score(torch::Tensor &query,
-                       torch::Tensor &key_cache, torch::Tensor &block_tables, 
-                       torch::Tensor &context_lens) {
+torch::Tensor ref_compute_score(torch::Tensor &query, torch::Tensor &key_cache,
+                                torch::Tensor &block_tables,
+                                torch::Tensor &context_lens) {
   auto num_seqs = query.size(0);
   auto num_heads = query.size(1);
   auto head_size = query.size(2);
@@ -116,16 +117,21 @@ torch::Tensor ref_compute_score(torch::Tensor &query,
   auto seq_len = context_lens[0].item<int>();
 
   auto query_group_size = num_heads / num_kv_heads;
-  auto tem_query = query.view({num_seqs, num_kv_heads, query_group_size, head_size});
+  auto tem_query =
+      query.view({num_seqs, num_kv_heads, query_group_size, head_size});
 
-  uint32_t useful_blocks = seq_len / block_size;
-  torch::Tensor scores = torch::zeros({num_seqs, num_kv_heads, useful_blocks, query_group_size, block_size}, torch::kFloat32).to(query.device());
+  uint32_t useful_blocks = (seq_len + block_size - 1) / block_size;
+  torch::Tensor scores = torch::zeros({num_seqs, num_kv_heads, useful_blocks,
+                                       query_group_size, block_size},
+                                      torch::kFloat32)
+                             .to(query.device());
 
   for (int i = 0; i < num_seqs; ++i) {
     auto start_block = block_tables[i];
     for (int j = 0; j < num_kv_heads; ++j) {
       auto query_slice = tem_query[i][j];
       for (int k = 0; k < useful_blocks; ++k) {
+        // std::cout << "start_block[k]: " << start_block[k].item<int>() << std::endl;
         auto curr_key_block = key_cache[start_block[k]];
         auto key_slice = curr_key_block.index({Slice(), j, Slice()});
 
@@ -133,30 +139,44 @@ torch::Tensor ref_compute_score(torch::Tensor &query,
       }
     }
   }
-  return scores;
+  return scores.transpose(2, 3).contiguous().view({num_seqs, num_heads, useful_blocks * block_size});
 }
 
-int main(int argc, char* argv[]) {
-  
+void assert_allclose(const torch::Tensor& a, const torch::Tensor& b,
+                     double rtol = 1e-2, double atol = 1e-3) {
+  TORCH_CHECK(torch::allclose(a, b, rtol, atol),
+              "Tensors are not close:\n", a, "\nvs\n", b);
+}
+
+int main(int argc, char *argv[]) {
+
+  // fixed template parameters
   using T = fp16;
   using U = uint32_t;
   constexpr gpu::xetla::gpu_arch arch_tag = gpu_arch::XeHpc;
 
-  constexpr uint32_t num_queries_per_tokens = 8;
   constexpr float sm_scale = 1.0f;
   constexpr float softcap = -1.0f;
 
-  cxxopts::Options options("test_paged_attn", "test paged attention kernel on XPU");
+  // get command line arguments
+  cxxopts::Options options("test_paged_attn",
+                           "test paged attention kernel on XPU");
 
-  options.add_options()
-            ("ns,num_seqs", "num of seqs", cxxopts::value<uint32_t>()->default_value("1"))
-            ("nh,num_heads", "num of query heads", cxxopts::value<uint32_t>()->default_value("16"))
-            ("kvh,num_kv_heads", "num of kv heads", cxxopts::value<uint32_t>()->default_value("2"))
-            ("blks,block_size", "block size", cxxopts::value<uint32_t>()->default_value("64"))
-            ("hs,head_size", "head size", cxxopts::value<uint32_t>()->default_value("128"))
-            ("sl,context_len", "context length", cxxopts::value<uint32_t>()->default_value("512"))
-            ("ps,partition_size", "partition size", cxxopts::value<uint32_t>()->default_value("512"))
-            ("h,help", "Print usage");
+  options.add_options()("ns,num_seqs", "num of seqs",
+                        cxxopts::value<uint32_t>()->default_value("1"))(
+      "nh,num_heads", "num of query heads",
+      cxxopts::value<uint32_t>()->default_value("16"))(
+      "kvh,num_kv_heads", "num of kv heads",
+      cxxopts::value<uint32_t>()->default_value("2"))(
+      "blks,block_size", "block size",
+      cxxopts::value<uint32_t>()->default_value("64"))(
+      "hs,head_size", "head size",
+      cxxopts::value<uint32_t>()->default_value("128"))(
+      "sl,context_len", "context length",
+      cxxopts::value<uint32_t>()->default_value("512"))(
+      "ps,partition_size", "partition size",
+      cxxopts::value<uint32_t>()->default_value("512"))("h,help",
+                                                        "Print usage");
   auto result = options.parse(argc, argv);
 
   if (result.count("help")) {
@@ -164,7 +184,7 @@ int main(int argc, char* argv[]) {
     std::cout << options.help() << std::endl;
     return 0;
   }
-  
+
   // Parse command line arguments
   uint32_t num_seqs = result["ns"].as<uint32_t>();
   uint32_t num_heads = result["nh"].as<uint32_t>();
@@ -173,9 +193,11 @@ int main(int argc, char* argv[]) {
   uint32_t head_size = result["hs"].as<uint32_t>();
   uint32_t context_len = result["sl"].as<uint32_t>();
   uint32_t partition_size = result["ps"].as<uint32_t>();
-
-  uint32_t max_num_partitions = (context_len + partition_size - 1) / partition_size;
+  uint32_t max_num_partitions =
+      (context_len + partition_size - 1) / partition_size;
   uint32_t max_blocks_per_seq = (context_len + block_size - 1) / block_size;
+  uint32_t num_queries_per_tokens = num_heads / num_kv_heads;
+
   // init tensors
   torch::Tensor max_logits =
       torch::ones({num_seqs, num_heads, max_num_partitions}, torch::kFloat32)
@@ -189,14 +211,14 @@ int main(int argc, char* argv[]) {
           .to(torch::kXPU);
   // store temporary output
   torch::Tensor tem_output =
-      torch::zeros({num_seqs, num_heads, partition_size}, torch::kFloat32)
+      torch::zeros({num_seqs, num_heads, max_blocks_per_seq * block_size}, torch::kFloat32)
           .to(torch::kXPU);
 
   torch::Tensor query =
       torch::ones({num_seqs, num_heads, head_size}, torch::kHalf)
           .to(torch::kXPU);
   torch::Tensor key_cache =
-      torch::ones({num_blocks, block_size, num_kv_heads, head_size},
+      torch::randn({num_blocks, block_size, num_kv_heads, head_size},
                   torch::kHalf)
           .to(torch::kXPU);
   torch::Tensor value_cache =
@@ -216,7 +238,7 @@ int main(int argc, char* argv[]) {
   block_tables[0] =
       torch::arange(0, max_blocks_per_seq, torch::kInt).to(torch::kXPU);
   init_query(query);
-
+  
   std::cout << "max_logits shape: " << max_logits.sizes()
             << " dtype: " << max_logits.dtype() << std::endl;
   std::cout << "exp_sums shape: " << exp_sums.sizes()
@@ -249,18 +271,27 @@ int main(int argc, char* argv[]) {
   auto *alibi_slopes_ptr = alibi_slopes.data_ptr<float>();
   auto *block_tables_ptr = block_tables.data_ptr();
   auto *context_lens_ptr = context_lens.data_ptr();
-  
+
   auto ref_scores =
       ref_compute_score(query, key_cache, block_tables, context_lens);
+  std::cout << "ref_scores shape: " << ref_scores.sizes()
+            << " dtype: " << ref_scores.dtype() << std::endl;
 
-  // print_tensor_slice(ref_scores[0][0][0], 0, 8, 0, 64);
+  int64_t r_start = 8, r_end = 16;
+  int64_t c_start = 128, c_end = c_start + 64;
+  // print_tensor_slice(ref_scores[0], r_start, r_end, c_start, c_end);
   printf("\n\n---------------------------------------------\n\n");
 
-  launch_policy_v2<T, U, arch_tag>(
-      max_logits_ptr, exp_sums_ptr, reinterpret_cast<T*>(output_ptr), reinterpret_cast<T*>(query_ptr), reinterpret_cast<T*>(key_cache_ptr),
-      reinterpret_cast<T*>(value_cache_ptr), alibi_slopes_ptr, tem_output_ptr, reinterpret_cast<U *>(block_tables_ptr),
-      reinterpret_cast<U *>(context_lens_ptr), max_num_partitions, num_queries_per_tokens, sm_scale, num_seqs, num_heads,
-      num_kv_heads, max_blocks_per_seq, softcap, head_size, block_size);
+  dispatch_paged_attention<T, U, arch_tag>(
+      head_size, block_size, max_logits_ptr, exp_sums_ptr,
+      reinterpret_cast<T *>(output_ptr), reinterpret_cast<T *>(query_ptr),
+      reinterpret_cast<T *>(key_cache_ptr),
+      reinterpret_cast<T *>(value_cache_ptr), alibi_slopes_ptr, tem_output_ptr,
+      reinterpret_cast<U *>(block_tables_ptr),
+      reinterpret_cast<U *>(context_lens_ptr), max_num_partitions,
+      num_queries_per_tokens, sm_scale, num_seqs, num_heads, num_kv_heads,
+      max_blocks_per_seq, softcap);
 
-  print_tensor_slice(tem_output[0], 0, 8, 64, 128);
+  // print_tensor_slice(tem_output[0], r_start, r_end, c_start, c_end);
+  assert_allclose(tem_output, ref_scores);
 }

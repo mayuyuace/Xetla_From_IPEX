@@ -582,13 +582,13 @@ class paged_attention_kernel {
       // Note, we didn't add correct boundary for context length, as we handled
       // this in following mask
       const int block_id = ctx.block_table[bid];
+      
       int32_t start_y = block_id * block_size;
       uint32_t boundary_y = start_y + block_size;
-
       int32_t start_x = ctx.kv_head_stride;
       uint32_t boundary_x = start_x + args.head_size;
       uint32_t pitch = args.head_size * args.num_kv_heads;
-      auto* cur_key_cache = args.key_cache + block_id * ctx.kv_block_stride;
+      auto* cur_key_cache = args.key_cache;
       key_payload_t key_payload(
           cur_key_cache, boundary_x, boundary_y, pitch, start_x, start_y);
       key_prefetch_payload_t key_prefetch_payload(
