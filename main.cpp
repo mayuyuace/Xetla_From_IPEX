@@ -238,6 +238,9 @@ int main(int argc, char *argv[]) {
   block_tables[0] =
       torch::arange(0, max_blocks_per_seq, torch::kInt).to(torch::kXPU);
   init_query(query);
+  // for (int i = 0; i < num_blocks; ++i) {
+  //   key_cache[i].fill_(i + 1);
+  // }
   
   std::cout << "max_logits shape: " << max_logits.sizes()
             << " dtype: " << max_logits.dtype() << std::endl;
@@ -277,8 +280,8 @@ int main(int argc, char *argv[]) {
   std::cout << "ref_scores shape: " << ref_scores.sizes()
             << " dtype: " << ref_scores.dtype() << std::endl;
 
-  int64_t r_start = 8, r_end = 16;
-  int64_t c_start = 128, c_end = c_start + 64;
+  int64_t r_start = 0, r_end = r_start + 8;
+  int64_t c_start = 0, c_end = c_start + 64;
   // print_tensor_slice(ref_scores[0], r_start, r_end, c_start, c_end);
   printf("\n\n---------------------------------------------\n\n");
 

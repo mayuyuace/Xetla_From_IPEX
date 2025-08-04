@@ -295,7 +295,7 @@ class paged_attention_kernel {
     float* alibi_slopes; // [num_heads] - alibi_slopes
 
     // temporary output
-    accum_t* tem_out; // [num_seqs, num_heads, partition_size]
+    accum_t* tem_out; // [num_seqs, num_heads, max_num_partitions * partition_size]
     // Index
     index_t* block_tables; // [num_seqs, max_blocks_per_seq]
     index_t* context_lens; // [num_seqs]
@@ -573,6 +573,8 @@ class paged_attention_kernel {
     key_tile_t mat_key;
 
     // iterate over context blocks
+
+    // sycl::ext::oneapi::experimental::printf("sg_id : %d start_block_id : %d\n", ctx.sg_id, ctx.start_block_id);
     for (int bid = ctx.sg_id + ctx.start_block_id, row_i = 0;
          bid < ctx.end_block_id;
          bid += wg_size, row_i++) {
@@ -606,7 +608,7 @@ class paged_attention_kernel {
       uint32_t start_score_y = ctx.kv_head_id * query_group_size;
       uint32_t boundary_score_y = start_score_y + query_group_size;
       /* sycl::ext::oneapi::experimental::printf("sg_id : %d\n", ctx.sg_id); */
-      uint32_t start_score_x = ctx.sg_id * block_size;
+      uint32_t start_score_x = ctx.sg_id * block_size + ctx.partition_id * partition_size;
       uint32_t boundary_score_x = start_score_x + block_size;
 
       auto* tem_out = args.tem_out + ctx.seq_id * args.num_heads * partition_size;
@@ -614,7 +616,7 @@ class paged_attention_kernel {
           tem_out,
           boundary_score_x,
           boundary_score_y,
-          partition_size,
+          ctx.max_num_partitions * partition_size,
           start_score_x,
           start_score_y);
 
