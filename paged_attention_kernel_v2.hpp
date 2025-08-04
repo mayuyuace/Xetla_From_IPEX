@@ -375,12 +375,15 @@ class paged_attention_kernel {
 
   // -------------------- // Slm and nbarrier // -------------------- //
 
+  static constexpr uint32_t slm_size_score = query_group_size * partition_size *
+      sizeof(accum_t);
   static constexpr uint32_t slm_size_query = max_head_size * sizeof(scalar_t);
   static constexpr uint32_t slm_size_softmax =
       (wg_size > 1) ? wg_size * sizeof(accum_t) : 0;
   static constexpr uint32_t slm_size_out =
       max_head_size * wg_size * sizeof(accum_t);
 
+  static constexpr uint32_t slm_offset_score = 0;
   static constexpr uint32_t slm_offset_query = 0;
   static constexpr uint32_t slm_offset_softmax =
       slm_offset_query + slm_size_query;
@@ -510,16 +513,16 @@ class paged_attention_kernel {
   using score_tile_t = subgroup::tile_t<accum_t, score_tile_desc_t>;
 
   // Compute query x key.
-  inline void compute_score(score_tile_t& mat_score, arguments_t& args) {
+  inline void compute_score(arguments_t& args) {
     constexpr uint32_t sg_tile_size_head =
         head_size_stride > 32 / sizeof(scalar_t) ? 32 / sizeof(scalar_t)
                                                  : head_size_stride;
     constexpr uint32_t sg_tile_size_block = mma_sg_tile_size;
 
     using score_payload_t = subgroup::mem_payload_t<
-        mem_desc_t<accum_t, mem_layout::row_major, mem_space::global>,
+        mem_desc_t<accum_t, mem_layout::row_major, mem_space::local>,
         score_tile_desc_t,
-        msg_type::block_2d,
+        msg_type::scatter,
         arch_tag>;
 
     using query_tile_desc_t =
@@ -573,8 +576,6 @@ class paged_attention_kernel {
     key_tile_t mat_key;
 
     // iterate over context blocks
-
-    // sycl::ext::oneapi::experimental::printf("sg_id : %d start_block_id : %d\n", ctx.sg_id, ctx.start_block_id);
     for (int bid = ctx.sg_id + ctx.start_block_id, row_i = 0;
          bid < ctx.end_block_id;
          bid += wg_size, row_i++) {
@@ -605,20 +606,17 @@ class paged_attention_kernel {
           cur_query, boundary_query_x, boundary_query_y, max_head_size, 0, 0);
       
 
-      uint32_t start_score_y = ctx.kv_head_id * query_group_size;
-      uint32_t boundary_score_y = start_score_y + query_group_size;
-      /* sycl::ext::oneapi::experimental::printf("sg_id : %d\n", ctx.sg_id); */
-      uint32_t start_score_x = ctx.sg_id * block_size + ctx.partition_id * partition_size;
+      uint32_t boundary_score_y = query_group_size;
+      uint32_t start_score_x = ctx.sg_id * block_size;
       uint32_t boundary_score_x = start_score_x + block_size;
 
-      auto* tem_out = args.tem_out + ctx.seq_id * args.num_heads * partition_size;
       score_payload_t score_payload(
-          tem_out,
+          slm_offset_score,
           boundary_score_x,
           boundary_score_y,
-          ctx.max_num_partitions * partition_size,
+          partition_size,
           start_score_x,
-          start_score_y);
+          0);
 
 
 #pragma unroll
@@ -666,8 +664,8 @@ class paged_attention_kernel {
       //   score_sub.xetla_merge(neg_infinity, mask);
       // }
       
-      mat_score.reg.xetla_select<query_group_size * block_size, 1>(
-          row_i * query_group_size * block_size) = score_sub.reg;
+      // mat_score.reg.xetla_select<query_group_size * block_size, 1>(
+      //     row_i * query_group_size * block_size) = score_sub.reg;
     }
   }
 
@@ -969,8 +967,8 @@ class paged_attention_kernel {
 
     /* preload_query(args); */
 
-    score_tile_t mat_score(0.0f);
-    compute_score(mat_score, args);
+    // score_tile_t mat_score(0.0f);
+    compute_score(args);
 
     // softmax(mat_score, args);
 
