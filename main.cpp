@@ -311,7 +311,7 @@ int main(int argc, char *argv[]) {
   std::cout << "ref_max_logits shape: " << ref_max_logits.sizes()
             << " dtype: " << ref_max_logits.dtype() << std::endl;
   // std::cout << ref_max_logits << std::endl;
-  std::cout << ref_exp_sums << std::endl;
+  // std::cout << ref_exp_sums << std::endl;
 
   int64_t r_start = 0, r_end = r_start + 8;
   int64_t c_start = 0, c_end = c_start + 64;
@@ -329,7 +329,7 @@ int main(int argc, char *argv[]) {
       max_blocks_per_seq, softcap);
 
   // std::cout << max_logits << std::endl;
-  std::cout << exp_sums << std::endl;
+  // std::cout << exp_sums << std::endl;
   // print_tensor_slice(tem_output[0], r_start, r_end, c_start, c_end);
   assert_allclose(max_logits, ref_max_logits);
   assert_allclose(exp_sums, ref_exp_sums);
