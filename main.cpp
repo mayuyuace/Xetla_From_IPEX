@@ -142,6 +142,34 @@ torch::Tensor ref_compute_score(torch::Tensor &query, torch::Tensor &key_cache,
   return scores.transpose(2, 3).contiguous().view({num_seqs, num_heads, useful_blocks * block_size});
 }
 
+auto ref_softmax(torch::Tensor& scores, uint32_t partition_size=512) {
+  // scores: [num_seqs, num_heads, seq_len]
+  auto num_seqs = scores.size(0);
+  auto num_heads = scores.size(1);
+  auto seq_len = scores.size(2);
+  auto num_partitions = (seq_len + partition_size - 1) / partition_size;
+  auto scores_view = scores.view({scores.size(0), scores.size(1), num_partitions, partition_size});
+
+  torch::Tensor ref_max_logits = torch::empty({scores.size(0), scores.size(1), num_partitions}, torch::kFloat32)
+      .to(scores.device());
+  torch::Tensor ref_exp_sums = torch::empty({scores.size(0), scores.size(1), num_partitions}, torch::kFloat32).to(scores.device());
+
+  for (int i = 0; i < num_seqs; ++i) {
+    for (int j = 0; j < num_heads; ++j) {
+      for (int k = 0; k < num_partitions; ++k) {
+        auto score_slice = scores_view[i][j][k];
+        torch::Tensor ref_max_slice;         
+        torch::Tensor max_indices;
+        std::tie(ref_max_slice, max_indices) = torch::max(score_slice, /*dim=*/0, /*keepdim=*/false);
+        ref_max_logits[i][j][k] = ref_max_slice.item<float>();
+        score_slice = score_slice - ref_max_slice;
+        ref_exp_sums[i][j][k] = torch::sum(torch::exp(score_slice));
+      }
+    }
+  }
+  return std::make_tuple(ref_max_logits, ref_exp_sums);
+}
+
 void assert_allclose(const torch::Tensor& a, const torch::Tensor& b,
                      double rtol = 1e-2, double atol = 1e-3) {
   TORCH_CHECK(torch::allclose(a, b, rtol, atol),
@@ -279,6 +307,11 @@ int main(int argc, char *argv[]) {
       ref_compute_score(query, key_cache, block_tables, context_lens);
   std::cout << "ref_scores shape: " << ref_scores.sizes()
             << " dtype: " << ref_scores.dtype() << std::endl;
+  auto [ref_max_logits, ref_exp_sums] = ref_softmax(ref_scores, partition_size);
+  std::cout << "ref_max_logits shape: " << ref_max_logits.sizes()
+            << " dtype: " << ref_max_logits.dtype() << std::endl;
+  // std::cout << ref_max_logits << std::endl;
+  std::cout << ref_exp_sums << std::endl;
 
   int64_t r_start = 0, r_end = r_start + 8;
   int64_t c_start = 0, c_end = c_start + 64;
@@ -295,6 +328,9 @@ int main(int argc, char *argv[]) {
       num_queries_per_tokens, sm_scale, num_seqs, num_heads, num_kv_heads,
       max_blocks_per_seq, softcap);
 
+  // std::cout << max_logits << std::endl;
+  std::cout << exp_sums << std::endl;
   // print_tensor_slice(tem_output[0], r_start, r_end, c_start, c_end);
-  // assert_allclose(tem_output, ref_scores);
+  assert_allclose(max_logits, ref_max_logits);
+  assert_allclose(exp_sums, ref_exp_sums);
 }

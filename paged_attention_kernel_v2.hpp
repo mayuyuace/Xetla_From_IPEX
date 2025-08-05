@@ -534,9 +534,6 @@ class paged_attention_kernel {
         msg_type::block_2d,
         arch_tag>;
     constexpr tdesc_update_dir query_update_dir = tdesc_update_dir::x_dir;
-    constexpr uint32_t tile_size_1d = arch_tag >= gpu_arch::XeHpc
-        ? block_size * head_size_stride
-        : block_size;
     using key_tile_desc_t = subgroup::tile_desc_t<
         block_size,
         head_size_stride,
@@ -640,6 +637,9 @@ class paged_attention_kernel {
 
       }
       subgroup::tile_store(score_sub, score_payload);
+      xetla_fence<memory_kind::shared_local>();
+      if constexpr (wg_size > 1)
+        ctx.nbarrier.arrive_wait();
 
       // score_sub.reg *= args.sm_scale;
       // if (args.softcap > 0.0) {
@@ -672,66 +672,79 @@ class paged_attention_kernel {
   // -------------------- // softmax // -------------------- //
 
   // Compute softmax of score.
-  inline void softmax(score_tile_t& mat_score, arguments_t& args) {
-    using wg_reduce_max_t =
-        group_reduce_t<score_tile_t, wg_size, reduce_op::max, arch_tag>;
-    using wg_reduce_sum_t =
-        group_reduce_t<score_tile_t, wg_size, reduce_op::sum, arch_tag>;
+  inline void softmax(arguments_t& args) {
+    using softmax_score_tile_desc_t = subgroup::
+        tile_desc_t<partition_size, 
+                    1, 
+                    mma_sg_tile_size, 
+                    1>;
+    using softmax_score_tile_t = subgroup::tile_t<accum_t, softmax_score_tile_desc_t>;
+    softmax_score_tile_t sm_mat_score;
 
-    wg_reduce_max_t wg_reduce_max(
-        ctx.num_blocks_per_sg, ctx.sg_id, 0, slm_offset_softmax);
-    accum_t group_max = wg_reduce_max(mat_score);
-    if constexpr (wg_size > 1)
-      ctx.nbarrier.arrive();
+    using sm_local_payload_t = subgroup::mem_payload_t<
+        mem_desc_t<accum_t, mem_layout::row_major, mem_space::local>,
+        softmax_score_tile_desc_t,
+        msg_type::block_1d,
+        arch_tag>;
 
-    mat_score.reg -= group_max;
-    mat_score.reg = xetla_exp<accum_t>(mat_score.reg);
+    uint32_t start_y = ctx.sg_id;
+    uint32_t boundary_y = query_group_size;
+    sm_local_payload_t sm_local_payload(
+        slm_offset_score,
+        partition_size,
+        boundary_y,
+        partition_size,
+        0,
+        start_y);
 
-    wg_reduce_sum_t wg_reduce_sum(
-        ctx.num_blocks_per_sg, ctx.sg_id, 0, slm_offset_softmax);
-    if constexpr (wg_size > 1) {
-      ctx.nbarrier.wait();
-    }
-    accum_t group_sum = wg_reduce_sum(mat_score);
-    mat_score.reg /= group_sum;
+    subgroup::tile_load(sm_mat_score, sm_local_payload);
+    xetla_vector<accum_t, 1> max_score = 
+      subgroup::tile_reduce<reduce_op::max, accum_t, accum_t, 1>(sm_mat_score);
 
-    if (use_partition && group_max == neg_infinity) {
-      mat_score.reg = 0.f;
-      group_sum = 0.f;
-    }
+    accum_t scalar_max = max_score[0];
+    // sycl::ext::oneapi::experimental::printf("sg_id : %d scalar_max: %f\n", ctx.sg_id, 
+    //     scalar_max);
+    sm_mat_score.reg -= scalar_max;
+    sm_mat_score.reg = xetla_exp<accum_t>(sm_mat_score.reg);
+    
+    xetla_vector<accum_t, 1> sum_score = 
+      subgroup::tile_reduce<reduce_op::sum, accum_t, accum_t, 1>(sm_mat_score);
 
-    if (use_partition && ctx.sg_id == 0) {
-      // store the max and exp_sum
-      using tile_desc_t = subgroup::tile_desc_t<1, 1, 1, 1>;
-      using tile_t = subgroup::tile_t<accum_t, tile_desc_t>;
-      using global_st_payload_t = subgroup::mem_payload_t<
-          mem_desc_t<accum_t, mem_layout::row_major, mem_space::global>,
-          tile_desc_t,
-          msg_type::block_1d,
-          arch_tag>;
+    // Store max and sum
+    using scalar_tile_desc_t = subgroup::tile_desc_t<1, 1, 1, 1>;
+    using scalar_tile_t = subgroup::tile_t<accum_t, scalar_tile_desc_t>;
+    using global_scalar_st_payload_t = subgroup::mem_payload_t<
+        mem_desc_t<accum_t, mem_layout::row_major, mem_space::global>,
+        scalar_tile_desc_t,
+        msg_type::block_1d,
+        arch_tag>;
 
-      uint32_t boundary_y = args.num_seqs * args.num_heads;
-      int32_t start_y = ctx.seq_id * args.num_heads + ctx.head_id;
-      global_st_payload_t max_logits_st_payload(
-          args.max_logits,
-          ctx.max_num_partitions,
-          boundary_y,
-          ctx.max_num_partitions,
-          ctx.partition_id,
-          start_y);
-      tile_t max_logit(group_max);
-      subgroup::tile_store(max_logit, max_logits_st_payload);
+    uint32_t start_g_x = ctx.partition_id;
+    uint32_t boundary_g_x = ctx.max_num_partitions;
+    uint32_t start_g_y = ctx.kv_head_id * query_group_size + ctx.sg_id;
+    uint32_t boundary_g_y = start_g_y + 1;
 
-      global_st_payload_t exp_sums_st_payload(
-          args.exp_sums,
-          ctx.max_num_partitions,
-          boundary_y,
-          ctx.max_num_partitions,
-          ctx.partition_id,
-          start_y);
-      tile_t exp_sum(group_sum);
-      subgroup::tile_store(exp_sum, exp_sums_st_payload);
-    }
+    auto* cur_max_logits = args.max_logits + ctx.seq_id * args.num_heads * ctx.max_num_partitions;
+    global_scalar_st_payload_t max_logits_st_payload(
+        cur_max_logits,
+        boundary_g_x,
+        boundary_g_y,
+        ctx.max_num_partitions,
+        start_g_x,
+        start_g_y);
+    scalar_tile_t max_logit_scalar(max_score[0]);
+    subgroup::tile_store(max_logit_scalar, max_logits_st_payload);
+
+    auto* cur_exp_sums = args.exp_sums + ctx.seq_id * args.num_heads * ctx.max_num_partitions;
+    global_scalar_st_payload_t exp_sums_st_payload(
+        cur_exp_sums,
+        boundary_g_x,
+        boundary_g_y,
+        ctx.max_num_partitions,
+        start_g_x,
+        start_g_y);
+    scalar_tile_t exp_sum_scalar(sum_score[0]);
+    subgroup::tile_store(exp_sum_scalar, exp_sums_st_payload);
   }
 
   // -------------------- // comput_out // -------------------- //
@@ -927,7 +940,7 @@ class paged_attention_kernel {
  public:
   // Get the local memory size consumption.
   inline static constexpr uint32_t get_slm_size() {
-    constexpr uint32_t size = slm_size_query + slm_size_softmax + slm_size_out;
+    constexpr uint32_t size = slm_size_score;
     static_assert(
         size <= (128 * 1024),
         "The local memory size should be less than 128KB!");
@@ -970,7 +983,7 @@ class paged_attention_kernel {
     // score_tile_t mat_score(0.0f);
     compute_score(args);
 
-    // softmax(mat_score, args);
+    softmax(args);
 
     // out_tile_t mat_out(0.0f);
     // comput_out(mat_score, mat_out, args);
