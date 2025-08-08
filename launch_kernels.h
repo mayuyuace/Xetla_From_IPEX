@@ -9,7 +9,7 @@ template <uint32_t head_size, uint32_t block_size, typename T, typename U,
           gpu_arch arch_tag>
 inline void launch_paged_attn_v2(
     float *max_logits, float *exp_sums, T *out, T *query, T *key_cache,
-    T *value_cache, float *alibi_slopes, float *tem_out, U *block_tables,
+    T *value_cache, float *alibi_slopes, T *tem_out, U *block_tables,
     U *context_lens, uint32_t max_num_partitions,
     uint32_t num_queries_per_tokens, float sm_scale, uint32_t num_seqs,
     uint32_t num_heads, uint32_t num_kv_heads, uint32_t max_blocks_per_seq,
@@ -17,6 +17,8 @@ inline void launch_paged_attn_v2(
   using policy = paged_attention_policy_v2<head_size, block_size>;
   using kernel = paged_attention_kernel<policy, T, U, arch_tag>;
 
+  printf("num_seqs: %u, num_kv_heads: %u, max_num_partitions: %u\n",
+         num_seqs, num_kv_heads, max_num_partitions);
   sycl::nd_range<3> nd_range =
       kernel::get_nd_range(num_seqs, num_kv_heads, max_num_partitions);
 
@@ -28,7 +30,7 @@ inline void launch_paged_attn_v2(
               kernel kernel_fn;
               typename kernel::arguments_t args(
                   max_logits, exp_sums, reinterpret_cast<T *>(out),
-                  reinterpret_cast<float *>(tem_out),
+                  reinterpret_cast<T *>(tem_out),
                   reinterpret_cast<T *>(query),
                   reinterpret_cast<T *>(key_cache),
                   reinterpret_cast<T *>(value_cache),
@@ -47,7 +49,7 @@ template <typename T, typename U, gpu_arch arch_tag>
 inline void dispatch_paged_attention(
     uint32_t head_size, uint32_t block_size, float *max_logits, float *exp_sums,
     T *out, T *query, T *key_cache, T *value_cache, float *alibi_slopes,
-    float *tem_out, U *block_tables, U *context_lens,
+    T *tem_out, U *block_tables, U *context_lens,
     uint32_t max_num_partitions, uint32_t num_queries_per_tokens,
     float sm_scale, uint32_t num_seqs, uint32_t num_heads,
     uint32_t num_kv_heads, uint32_t max_blocks_per_seq, float softcap) {

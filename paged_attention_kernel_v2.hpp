@@ -295,7 +295,7 @@ class paged_attention_kernel {
     float* alibi_slopes; // [num_heads] - alibi_slopes
 
     // temporary output
-    accum_t* tem_out; // [num_seqs, num_heads, max_num_partitions * partition_size]
+    scalar_t* tem_out; // [num_seqs, num_heads, max_num_partitions * partition_size]
     // Index
     index_t* block_tables; // [num_seqs, max_blocks_per_seq]
     index_t* context_lens; // [num_seqs]
@@ -318,7 +318,7 @@ class paged_attention_kernel {
         accum_t* max_logits,
         accum_t* exp_sums,
         scalar_t* out,
-        accum_t* tem_out,
+        scalar_t* tem_out,
         scalar_t* query,
         scalar_t* key_cache,
         scalar_t* value_cache,
@@ -372,6 +372,7 @@ class paged_attention_kernel {
       std::max(max_head_size / wg_size, 16u);
   static constexpr uint32_t partition_size = policy::partition_size;
   static constexpr bool use_partition = partition_size > 0;
+  static constexpr uint32_t value_blocks_per_sg = partition_size / block_size;
 
   // -------------------- // Slm and nbarrier // -------------------- //
 
@@ -637,7 +638,6 @@ class paged_attention_kernel {
         key_payload.template update_tdesc<key_update_dir>(head_size_stride);
         
         tile_mma::mma(score_sub, score_sub, mat_key, mat_query);
-
       }
       subgroup::tile_store(score_sub, score_payload);
       xetla_fence<memory_kind::shared_local>();
@@ -695,6 +695,13 @@ class paged_attention_kernel {
         msg_type::block_1d,
         arch_tag>;
 
+    // tem_out to check if softmax right
+    using tem_global_st_payload_t = subgroup::mem_payload_t<
+        mem_desc_t<scalar_t, mem_layout::row_major, mem_space::global>,
+        softmax_score_tile_desc_t,
+        msg_type::block_1d,
+        arch_tag>;
+
     uint32_t start_y = ctx.sg_id;
     uint32_t boundary_y = query_group_size;
     sm_local_ld_payload_t sm_local_ld_payload(
@@ -717,7 +724,7 @@ class paged_attention_kernel {
       subgroup::tile_reduce<reduce_op::sum, accum_t, accum_t, 1>(sm_mat_score);
     accum_t scalar_sum = sum_score[0];
     sm_mat_score.reg /= scalar_sum;
-
+    
     // Store the softmax result back to shared local memory
     using softmax_exp_score_tile_t = subgroup::tile_t<scalar_t, softmax_score_tile_desc_t>;
     softmax_exp_score_tile_t sm_mat_exp_score;
@@ -734,6 +741,20 @@ class paged_attention_kernel {
     xetla_fence<memory_kind::shared_local>();
     if constexpr (wg_size > 1)
       ctx.nbarrier.arrive_wait();
+
+    // store tem_out for softmax check
+    auto* cur_tem_out = args.tem_out + ctx.seq_id * args.num_heads * ctx.max_num_partitions * partition_size + 
+        ctx.kv_head_id * query_group_size * ctx.max_num_partitions * partition_size;
+    uint32_t start_tem_x = ctx.partition_id * partition_size;
+    uint32_t boundary_tem_x = start_tem_x + partition_size;
+    tem_global_st_payload_t tem_out_st_payload(
+        cur_tem_out,
+        boundary_tem_x,
+        query_group_size,
+        ctx.max_num_partitions * partition_size,
+        start_tem_x,
+        ctx.sg_id);
+    subgroup::tile_store(sm_mat_exp_score, tem_out_st_payload);
 
     // Store max and sum
     using scalar_tile_desc_t = subgroup::tile_desc_t<1, 1, 1, 1>;
@@ -774,191 +795,108 @@ class paged_attention_kernel {
 
   // -------------------- // compute_out // -------------------- //
 
-  using out_tile_desc_t = subgroup::tile_desc_t<head_size_per_sg, query_group_size, 16, 1>;
-  using out_tile_t = subgroup::tile_t<accum_t, out_tile_desc_t>;
 
   // Compute output.
   inline void compute_out(
-      out_tile_t& mat_out,
       arguments_t& args) {
     constexpr uint32_t sg_tile_size_head =
-        std::min(uint32_t(head_size_stride), uint32_t(32 / sizeof(scalar_t)));
-    constexpr uint32_t sg_tile_size_block = std::min(uint32_t(block_size), 32u);
-    constexpr uint32_t sg_tile_size_x = !has_2d_ld_st
-        ? sg_tile_size_block
-        : std::min(uint32_t(block_size), uint32_t(32 / sizeof(scalar_t)));
-    constexpr uint32_t sg_tile_size_y = !has_2d_ld_st ? sg_tile_size_head : 16;
-    constexpr uint32_t tile_size_1d = arch_tag >= gpu_arch::XeHpc
-        ? block_size * head_size_stride
-        : block_size;
+        std::min(uint32_t(head_size_stride), uint32_t(32 / sizeof(scalar_t))); // 16
+    constexpr uint32_t sg_tile_size_block = std::min(uint32_t(block_size), 32u); // 32
+    constexpr uint32_t sg_tile_size_x = std::min(uint32_t(block_size), uint32_t(32 / sizeof(scalar_t))); // 16
+    constexpr uint32_t sg_tile_size_y = 16;
 
     using value_tile_desc_t = subgroup::tile_desc_t<
+        head_size_per_sg,
         block_size,
-        head_size_stride,
         sg_tile_size_x,
-        sg_tile_size_y>;
-    using value_1d_tile_desc_t =
-        subgroup::tile_desc_t<tile_size_1d, 1, sg_tile_size_x, 1>;
+        sg_tile_size_y,
+        reg_layout::vnni_tiled>;
     using value_tile_t = subgroup::tile_t<scalar_t, value_tile_desc_t>;
-    using value_1d_tile_t = subgroup::tile_t<scalar_t, value_1d_tile_desc_t>;
-    using value_acc_tile_t = subgroup::tile_t<accum_t, value_tile_desc_t>;
+    using value_payload_t = subgroup::mem_payload_t<
+        mem_desc_t<scalar_t, mem_layout::row_major, mem_space::global>,
+        value_tile_desc_t,
+        msg_type::block_2d,
+        arch_tag>;
 
-    using value_payload_t = std::conditional_t<
-        has_2d_ld_st,
-        subgroup::mem_payload_t<
-            mem_desc_t<scalar_t, mem_layout::row_major, mem_space::global>,
-            value_tile_desc_t,
-            msg_type::block_2d,
-            arch_tag>,
-        subgroup::mem_payload_t<
-            mem_desc_t<scalar_t, mem_layout::row_major, mem_space::global>,
-            value_1d_tile_desc_t,
-            msg_type::block_1d,
-            arch_tag>>;
-    using value_prefetch_payload_t = std::conditional_t<
-        has_2d_ld_st,
-        subgroup::prefetch_payload_t<
-            mem_desc_t<scalar_t, mem_layout::row_major, mem_space::global>,
-            value_tile_desc_t,
-            1,
-            arch_tag>,
-        subgroup::prefetch_payload_t<
-            mem_desc_t<scalar_t, mem_layout::row_major, mem_space::global>,
-            value_1d_tile_desc_t,
-            1,
-            arch_tag>>;
-    constexpr tdesc_update_dir value_update_dir = tdesc_update_dir::y_dir;
+    using exp_score_tile_desc_t = subgroup::
+        tile_desc_t<block_size, query_group_size, sg_tile_size_head, query_group_size>;
+    using exp_score_tile_t = subgroup::tile_t<scalar_t, exp_score_tile_desc_t>;
+    using exp_score_payload_t = subgroup::mem_payload_t<
+        mem_desc_t<scalar_t, mem_layout::row_major, mem_space::local>,
+        exp_score_tile_desc_t,
+        msg_type::scatter,  // TODO(baodi): block 2d to shared local mem?
+        arch_tag>;
+    constexpr tdesc_update_dir exp_score_update_dir = tdesc_update_dir::x_dir;
+      
+    constexpr uint32_t boundary_e_y = query_group_size;
+    constexpr uint32_t boundary_e_x = block_size;
+    constexpr uint32_t pitch_e = partition_size;
+    exp_score_payload_t exp_score_payload(
+        slm_offset_exp_score, boundary_e_x, boundary_e_y, pitch_e, 0, 0);
+  
+    using out_tile_desc_t = subgroup::tile_desc_t<head_size_per_sg, query_group_size, head_size_per_sg, query_group_size>;
+    using out_acc_tile_t = subgroup::tile_t<accum_t, out_tile_desc_t>;
+    using out_tile_t = subgroup::tile_t<scalar_t, out_tile_desc_t>;
+    
+    using tile_mma = subgroup::tile_mma_t<
+        out_acc_tile_t,
+        out_acc_tile_t,
+        value_tile_t,
+        exp_score_tile_t,
+        mma_engine::xmx,
+        arch_tag>;
 
+    exp_score_tile_t mat_exp_score;
     value_tile_t mat_value;
-
-    // iterate over context blocks
-    for (int bid = ctx.sg_id + ctx.start_block_id, row_i = 0;
-         bid < ctx.end_block_id;
-         bid += wg_size, row_i++) {
-      // get the physical block id from block_table
-      const int block_id = ctx.block_table[bid];
-
-      // Note: we didn't add correct boundary_x as odd seqlen breaks 2d load
-      // assumption. As previous score already set unvalid seqlen to zero, it's
-      // ok to load wrong v_cache for unvalid seq
-      constexpr uint32_t boundary_x = block_size;
-      int32_t start_y = ctx.kv_head_stride;
-      uint32_t boundary_y = start_y + args.head_size;
-      auto* cur_value_cache = args.value_cache + block_id * ctx.kv_block_stride;
-      value_payload_t value_payload(
-          cur_value_cache, boundary_x, boundary_y, block_size, 0, start_y);
-      value_prefetch_payload_t value_prefetch_payload(
-          cur_value_cache, boundary_x, boundary_y, block_size, 0, start_y);
+    out_acc_tile_t mat_acc_out(0.0f);
 
 #pragma unroll
-      for (int i = 0; i < stages; i++) {
-        constexpr int prefetch_update_stride =
-            has_2d_ld_st ? head_size_stride : 1;
-        subgroup::tile_prefetch(value_prefetch_payload);
-        value_prefetch_payload.template update_tdesc<tdesc_update_dir::y_dir>(
-            prefetch_update_stride);
-      }
+    for (uint32_t i = 0; i < value_blocks_per_sg; ++i) {
+      uint32_t cur_bid = i + ctx.start_block_id; 
+      uint32_t block_id = ctx.block_table[cur_bid];
 
-      auto score_sub =
-          mat_score.reg.xetla_select<block_size, 1>(row_i * block_size);
+      constexpr uint32_t boundary_v_y = block_size;
+      uint32_t start_v_x = ctx.kv_head_id * args.head_size + ctx.sg_id * head_size_per_sg;
+      uint32_t boundary_v_x = start_v_x + head_size_per_sg;
+      uint32_t pitch_v = args.num_kv_heads * args.head_size;
+      auto* cur_value_cache = args.value_cache + block_id * ctx.kv_block_stride;
+      value_payload_t value_payload(
+          cur_value_cache, boundary_v_x, boundary_v_y, pitch_v, start_v_x, 0);
 
-      for (int i = 0; i < ctx.loop_count; i++) {
-        tile_load_2d<
-            value_tile_t,
-            value_payload_t,
-            value_prefetch_payload_t,
-            value_update_dir,
-            false,
-            stages>(
-            mat_value,
-            value_payload,
-            value_prefetch_payload,
-            boundary_x,
-            boundary_y);
+      // TODO(baodi): we can use prefetch here to overlap the mma
 
-        if constexpr (stages != 0 && has_2d_ld_st) {
-          value_prefetch_payload.template update_tdesc<value_update_dir>(
-              head_size_stride);
-        }
-        value_acc_tile_t mat_value_acc;
-        subgroup::elemwise_cvt(mat_value_acc, mat_value);
-        auto out_sub =
-            mat_out.reg.xetla_select<head_size_stride, 1>(i * head_size_stride);
-        out_sub += mat_vec_mul<accum_t, block_size, value_acc_tile_t, 1>(
-            score_sub, mat_value_acc);
-      }
+      subgroup::tile_load(mat_exp_score, exp_score_payload);
+      subgroup::tile_load(mat_value, value_payload);
+
+      scalar_t test_1 = mat_exp_score.reg[0];
+      // sycl::ext::oneapi::experimental::printf("kv_head_id: %d, seq_id: %d, partition_id: %d, sg_id: %d\n", 
+      //     ctx.kv_head_id, ctx.seq_id, ctx.partition_id, ctx.sg_id);
+
+      exp_score_payload.template update_tdesc<exp_score_update_dir>(block_size);
+
+      tile_mma::mma(mat_acc_out, mat_acc_out, mat_value, mat_exp_score);
     }
-  }
 
-  // -------------------- // collect_out // -------------------- //
-
-  inline void collect_out(out_tile_t& mat_out, arguments_t& args) {
-    constexpr uint32_t sg_tile_size_x =
-        std::min(uint32_t(head_size_per_sg), uint32_t(32 / sizeof(scalar_t)));
-    constexpr uint32_t sg_tile_size_y = std::min(uint32_t(wg_size), 16u);
-
-    // for storing out to slm
-    using local_st_payload_t = subgroup::mem_payload_t<
-        mem_desc_t<accum_t, mem_layout::row_major, mem_space::local>,
-        out_tile_desc_t,
-        msg_type::scatter,
-        arch_tag>;
-    // for loading out to reg
-    using ld_tile_desc_t = subgroup::
-        tile_desc_t<head_size_per_sg, wg_size, sg_tile_size_x, sg_tile_size_y>;
-    using local_ld_tile_t = subgroup::tile_t<accum_t, ld_tile_desc_t>;
-    using local_ld_payload_t = subgroup::mem_payload_t<
-        mem_desc_t<accum_t, mem_layout::row_major, mem_space::local>,
-        ld_tile_desc_t,
-        msg_type::scatter,
-        arch_tag>;
-    // for storing out to global
-    using st_tile_desc_t =
-        subgroup::tile_desc_t<head_size_per_sg, 1, sg_tile_size_x, 1>;
-    using global_st_tile_t = subgroup::tile_t<scalar_t, st_tile_desc_t>;
-    using global_st_payload_t = subgroup::mem_payload_t<
+    out_tile_t mat_out;
+    subgroup::elemwise_cvt(mat_out, mat_acc_out);
+    
+    using out_st_payload_t = subgroup::mem_payload_t<
         mem_desc_t<scalar_t, mem_layout::row_major, mem_space::global>,
-        st_tile_desc_t,
-        msg_type::block_1d,
+        out_tile_desc_t,
+        msg_type::block_2d,
         arch_tag>;
+    
+    uint32_t start_o_x = ctx.partition_id * args.head_size + ctx.sg_id * head_size_per_sg; 
+    uint32_t boundary_o_x = start_o_x + head_size_per_sg;
+    constexpr uint32_t boundary_o_y = query_group_size;
+    uint32_t pitch_o = args.num_kv_heads * args.head_size;
+    auto* cur_out = args.out + ctx.seq_id * args.num_heads * ctx.max_num_partitions * args.head_size +
+        ctx.kv_head_id * ctx.max_num_partitions * args.head_size;
 
-    // store out data of each subgroup to slm
-    int32_t start_y = ctx.sg_id;
-    local_st_payload_t local_st_payload(
-        slm_offset_out, max_head_size, wg_size, max_head_size, 0, start_y);
-    subgroup::tile_store(mat_out, local_st_payload);
+    out_st_payload_t out_st_payload(
+        cur_out, boundary_o_x, boundary_o_y, pitch_o, start_o_x, 0);
 
-    xetla_fence<memory_kind::shared_local>();
-    if constexpr (wg_size > 1)
-      ctx.nbarrier.arrive_wait();
-
-    // load out data to register
-    uint32_t boundary_x = args.head_size;
-    uint32_t boundary_y =
-        args.num_seqs * args.num_heads * ctx.max_num_partitions;
-    uint32_t pitch = args.head_size;
-    int32_t start_x = ctx.sg_id * head_size_per_sg;
-    start_y = ctx.seq_id * args.num_heads * ctx.max_num_partitions +
-        ctx.head_id * ctx.max_num_partitions + ctx.partition_id;
-
-    if (start_x < args.head_size) {
-      // load out data to register
-      local_ld_tile_t mat_out_ld;
-      local_ld_payload_t local_ld_payload(
-          slm_offset_out, max_head_size, wg_size, max_head_size, start_x, 0);
-      subgroup::tile_load(mat_out_ld, local_ld_payload);
-
-      // do reduction
-      global_st_tile_t mat_out_st;
-      mat_out_st.reg =
-          subgroup::tile_reduce<reduce_op::sum, scalar_t, accum_t, 0>(
-              mat_out_ld);
-
-      // store out to global memory
-      global_st_payload_t global_st_payload(
-          args.out, boundary_x, boundary_y, pitch, start_x, start_y);
-      subgroup::tile_store(mat_out_st, global_st_payload);
-    }
+    subgroup::tile_store(mat_out, out_st_payload);
   }
 
  public:
@@ -984,6 +922,9 @@ class paged_attention_kernel {
     static const sycl::range<3> local_range = sycl::range<3>{1, 1, wg_size};
     sycl::range<3> group_range =
         sycl::range<3>{num_kv_heads, num_seqs, max_num_partitions};
+    printf("group_range: %zu, %zu, %zu local_range: %zu, %zu, %zu\n",
+           group_range[0], group_range[1], group_range[2],
+           local_range[0], local_range[1], local_range[2]); // Debugging output
     return sycl::nd_range<3>{group_range * local_range, local_range};
   };
 
@@ -1003,12 +944,8 @@ class paged_attention_kernel {
     xetla_nbarrier_init<get_barrier_count()>();
 
     compute_score(args);
-
     softmax(args);
-
-    out_tile_t mat_out(0.0f);
-    compute_out(mat_out, args);
-    // collect_out(mat_out, args);
+    compute_out(args);
   }
 };
 
