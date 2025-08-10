@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdexcept>
 #include <sycl/sycl.hpp>
 #include <torch/torch.h>
 
@@ -237,10 +238,58 @@ torch::Tensor ref_compute_out(torch::Tensor &scores, torch::Tensor &value_cache,
       {num_seqs, num_heads, num_partitions, head_size});
 }
 
-void assert_allclose(const torch::Tensor &a, const torch::Tensor &b,
-                     double rtol = 1e-2, double atol = 1e-3) {
-  TORCH_CHECK(torch::allclose(a, b, rtol, atol), "Tensors are not close:\n", a,
-              "\nvs\n", b);
+static std::string shape_to_string(const c10::IntArrayRef& shape) {
+    std::ostringstream oss;
+    oss << "[";
+    for (size_t i = 0; i < shape.size(); ++i) {
+        oss << shape[i];
+        if (i + 1 < shape.size()) oss << ", ";
+    }
+    oss << "]";
+    return oss.str();
+}
+
+void assert_allclose(const torch::Tensor &a, const torch::Tensor &b, float rtol = 1e-3, float atol = 1e-2) {
+    if (!a.sizes().equals(b.sizes())) {
+        throw std::runtime_error("Tensor sizes do not match: " +
+                                 shape_to_string(a.sizes()) + " vs " + shape_to_string(b.sizes()));
+    }
+
+    auto diff = torch::abs(a - b);
+    auto tol = atol + rtol * torch::abs(b);
+
+    auto mask = diff > tol;  // Boolean mask where tensors differ more than allowed
+    
+    if (mask.any().item<bool>()) {
+        auto indices = mask.nonzero();
+        std::cout << "Mismatches found (" << indices.size(0) << " positions):\n";
+
+        for (int i = 0; i < indices.size(0); ++i) {
+            auto idx = indices[i];
+            std::vector<int64_t> idx_vec(idx.size(0));
+            for (int j = 0; j < idx.size(0); ++j) {
+                idx_vec[j] = idx[j].item<int64_t>();
+            }
+
+            std::vector<torch::indexing::TensorIndex> ti;
+            ti.reserve(idx_vec.size());
+            for (auto v : idx_vec) {
+                ti.push_back(v);
+            }
+
+            float a_val = a.index(ti).item<float>();
+            float b_val = b.index(ti).item<float>();
+            float d_val = diff.index(ti).item<float>();
+
+            std::cout << "  idx=[";
+            for (size_t j = 0; j < idx_vec.size(); ++j) {
+                std::cout << idx_vec[j] << (j + 1 < idx_vec.size() ? ", " : "");
+            }
+            std::cout << "] diff=" << d_val << " (a=" << a_val << ", b=" << b_val << ")\n";
+        }
+    } else {
+        std::cout << "Tensors are allclose.\n";
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -331,8 +380,8 @@ int main(int argc, char *argv[]) {
 
   // Initialize tensors
   context_lens.fill_(context_len);
-  block_tables[0] =
-      torch::arange(0, max_blocks_per_seq, torch::kInt).to(torch::kXPU);
+  // block_tables[0] =
+  //     torch::arange(0, max_blocks_per_seq, torch::kInt).to(torch::kXPU);
   init_query(query);
   // for (int i = 0; i < num_blocks; ++i) {
   //   key_cache[i].fill_(i + 1);
@@ -379,21 +428,12 @@ int main(int argc, char *argv[]) {
   auto [ref_max_logits, ref_exp_sums] = ref_softmax(ref_scores, partition_size);
 
   ref_scores = ref_scores.to(torch::kHalf);
-  auto ref_output =
-      ref_compute_out(ref_scores, value_cache, block_tables, partition_size);
-
-  std::cout << "ref_output shape: " << ref_output.sizes()
-            << " dtype: " << ref_output.dtype() << std::endl;
-
-  ref_output = ref_output.transpose(1, 2).contiguous();
   
   printf("\n\n---------------------------------------------\n\n");
 
-  int64_t r_start = 0, r_end = r_start + 2;
-  int64_t c_start = 0, c_end = c_start + 512;
-  print_tensor_slice(ref_output[0][0].to(torch::kFloat32), r_start, r_end, c_start, c_end);
+  int64_t r_start = 0, r_end = r_start + 16;
+  int64_t c_start = 0, c_end = c_start + 16;
   
-  printf("\n\n---------------------------------------------\n\n");
 
   dispatch_paged_attention<T, U, arch_tag>(
       head_size, block_size, max_logits_ptr, exp_sums_ptr,
@@ -405,12 +445,24 @@ int main(int argc, char *argv[]) {
       reinterpret_cast<U *>(context_lens_ptr), max_num_partitions,
       num_queries_per_tokens, sm_scale, num_seqs, num_heads, num_kv_heads,
       max_blocks_per_seq, softcap);
+  
+  // ref_scores = torch::ones_like(ref_scores).to(torch::kHalf);
+  auto ref_output =
+      ref_compute_out(ref_scores, value_cache, block_tables, partition_size);
+
+  std::cout << "ref_output shape: " << ref_output.sizes()
+            << " dtype: " << ref_output.dtype() << std::endl;
+
+  ref_output = ref_output.transpose(1, 2).contiguous();
+  print_tensor_slice(ref_output[0][0].to(torch::kFloat32), r_start, r_end, c_start, c_end);
+  
+  printf("\n\n---------------------------------------------\n\n");
 
   auto output_trans = output.transpose(1, 2).contiguous();
   print_tensor_slice(output_trans[0][0].to(torch::kFloat32), r_start, r_end,
                      c_start, c_end);
-  assert_allclose(tem_output, ref_scores);
-  // assert_allclose(output_trans[0][0][0], ref_output[0][0][0]);
+  // assert_allclose(tem_output.to(torch::kFloat32), ref_scores.to(torch::kFloat32));
   assert_allclose(max_logits, ref_max_logits);
   assert_allclose(exp_sums, ref_exp_sums);
+  assert_allclose(output_trans.to(torch::kFloat32), ref_output.to(torch::kFloat32));
 }

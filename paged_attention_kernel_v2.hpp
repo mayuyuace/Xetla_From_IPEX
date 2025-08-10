@@ -868,7 +868,6 @@ class paged_attention_kernel {
       subgroup::tile_load(mat_exp_score, exp_score_payload);
       subgroup::tile_load(mat_value, value_payload);
 
-      scalar_t test_1 = mat_exp_score.reg[0];
       // sycl::ext::oneapi::experimental::printf("kv_head_id: %d, seq_id: %d, partition_id: %d, sg_id: %d\n", 
       //     ctx.kv_head_id, ctx.seq_id, ctx.partition_id, ctx.sg_id);
 
@@ -889,9 +888,9 @@ class paged_attention_kernel {
     uint32_t start_o_x = ctx.partition_id * args.head_size + ctx.sg_id * head_size_per_sg; 
     uint32_t boundary_o_x = start_o_x + head_size_per_sg;
     constexpr uint32_t boundary_o_y = query_group_size;
-    uint32_t pitch_o = args.num_kv_heads * args.head_size;
+    uint32_t pitch_o = ctx.max_num_partitions * args.head_size;
     auto* cur_out = args.out + ctx.seq_id * args.num_heads * ctx.max_num_partitions * args.head_size +
-        ctx.kv_head_id * ctx.max_num_partitions * args.head_size;
+        ctx.kv_head_id * query_group_size * ctx.max_num_partitions * args.head_size;
 
     out_st_payload_t out_st_payload(
         cur_out, boundary_o_x, boundary_o_y, pitch_o, start_o_x, 0);
