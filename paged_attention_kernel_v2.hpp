@@ -921,9 +921,9 @@ class paged_attention_kernel {
     static const sycl::range<3> local_range = sycl::range<3>{1, 1, wg_size};
     sycl::range<3> group_range =
         sycl::range<3>{num_kv_heads, num_seqs, max_num_partitions};
-    printf("group_range: %zu, %zu, %zu local_range: %zu, %zu, %zu\n",
-           group_range[0], group_range[1], group_range[2],
-           local_range[0], local_range[1], local_range[2]); // Debugging output
+    /* printf("group_range: %zu, %zu, %zu local_range: %zu, %zu, %zu\n", */
+    /*        group_range[0], group_range[1], group_range[2], */
+    /*        local_range[0], local_range[1], local_range[2]); // Debugging output */
     return sycl::nd_range<3>{group_range * local_range, local_range};
   };
 

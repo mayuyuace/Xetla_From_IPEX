@@ -16,10 +16,7 @@
 
 #include <cxxopts.hpp>
 
-constexpr uint32_t max_num_partitions = 1;
-constexpr uint32_t num_blocks = 3146;
-constexpr uint32_t block_size = 64;
-constexpr uint32_t num_kv_heads = 2;
+static constexpr int CacheSize = 400 * 1024 * 1024;
 
 using namespace at;
 using namespace gpu::xetla::attention;
@@ -222,14 +219,14 @@ torch::Tensor ref_compute_out(torch::Tensor &scores, torch::Tensor &value_cache,
         value_blocks.push_back(value_slice);
       }
       auto value_tensor = torch::cat(value_blocks, /*dim=*/0);
-      std::cout << "value_tensor shape: " << value_tensor.sizes() << std::endl;
+      /* std::cout << "value_tensor shape: " << value_tensor.sizes() << std::endl; */
       for (int k = 0; k < num_partitions; ++k) {
         auto score_slice = scores_view[i][j][k];
         auto value_partition =
             value_tensor.slice(0, k * partition_size, (k + 1) * partition_size)
                 .contiguous();
 
-        std::cout << "score_slice shape: " << score_slice.sizes() << std::endl;
+        /* std::cout << "score_slice shape: " << score_slice.sizes() << std::endl; */
         output[i][j][k] = torch::matmul(score_slice, value_partition);
       }
     }
@@ -292,6 +289,113 @@ void assert_allclose(const torch::Tensor &a, const torch::Tensor &b, float rtol 
     }
 }
 
+struct Shape {
+  Shape(int num_seqs, int num_heads, int num_kv_heads, int num_blocks,
+        int head_size, int max_context_len, int min_context_len,
+        int max_num_blocks_per_seq, int unique_count_number, int block_size)
+      : num_seqs(num_seqs), num_heads(num_heads), num_kv_heads(num_kv_heads),
+        num_blocks(num_blocks), head_size(head_size),
+        max_context_len(max_context_len), min_context_len(min_context_len),
+        max_num_blocks_per_seq(max_num_blocks_per_seq),
+        unique_count_number(unique_count_number), block_size(block_size),
+        head_scale(sycl::rsqrt(float(head_size))) {}
+  const int num_seqs;
+  const int num_heads;
+  const int num_kv_heads;
+  const int num_blocks;
+  const int head_size;
+  const int max_context_len;
+  const int min_context_len;
+  const int max_num_blocks_per_seq;
+  const int unique_count_number;
+  const int block_size;
+  const float head_scale;
+
+  // [num_seqs, num_heads, head_size]
+  inline uint32_t get_query_size() const {
+    return num_seqs * num_heads * head_size;
+  }
+
+  // [num_blocks, num_kv_heads, head_size, block_size]
+  inline uint64_t get_key_value_memory_size() const {
+    return uint64_t(num_blocks) * uint64_t(num_kv_heads) * uint64_t(head_size) *
+           uint64_t(block_size);
+  }
+
+  inline uint32_t get_num_buffer() const {
+    // 2 means datatype is bf16/fp16
+    uint32_t kv_size = get_key_value_memory_size() * 2 * 2;
+    uint32_t num_buffer = (uint64_t(CacheSize) + kv_size - 1) / kv_size;
+    return num_buffer;
+  }
+
+  inline uint64_t get_kv_bytes_no_repeat() const {
+    uint64_t size = num_kv_heads * unique_count_number * head_size * block_size;
+    return size * 4;
+  }
+
+  inline uint64_t get_kv_bytes() const {
+    uint64_t size = num_seqs * num_heads * head_size * max_context_len;
+    return size * 4;
+  }
+
+  // [num_seqs, max_num_blocks_per_seq]
+  inline uint32_t get_block_table() const {
+    return num_seqs * max_num_blocks_per_seq;
+  }
+
+  inline uint64_t get_io_size() const {
+    uint64_t hbm_bytes = get_kv_bytes_no_repeat();
+    uint64_t cache_bytes = get_kv_bytes();
+    // meaning L3 bound
+    if (cache_bytes > 3 * hbm_bytes) {
+      return cache_bytes;
+    } else {
+      return hbm_bytes;
+    }
+  }
+
+  inline uint64_t get_ops() const {
+    return uint64_t(num_seqs) * num_heads * (1 * head_size * max_context_len) *
+           2 * 2;
+  }
+};
+
+void print_perf(const Shape &shape, const std::vector<float> durations) {
+
+  printf("num_seqs: %d, num_heads: %d, head_size: %d, block_size: %d, "
+         "num_blocks: %d, max_seq_len: %d, min_seq_len: %d,  "
+         "max_num_blocks_per_seq: %d\n",
+         shape.num_seqs, shape.num_heads, shape.head_size, shape.block_size,
+         shape.num_blocks, shape.max_context_len, shape.min_context_len,
+         shape.max_num_blocks_per_seq);
+
+  float min = *(std::min_element(durations.begin(), durations.end()));
+  float max = *(std::max_element(durations.begin(), durations.end()));
+  float avg = std::accumulate(durations.begin(), durations.end(), 0.0) /
+              durations.size();
+
+  float hbm_bw = shape.get_kv_bytes_no_repeat() / 1e3 / min;
+  float l3_bw = shape.get_kv_bytes() / 1e3 / min;
+  float flops = shape.get_ops() / 1e6 / min;
+  std::cout << "kv total cache size: "
+            << shape.get_key_value_memory_size() * 2 * 2 / 1000000.0f
+            << " M, num_buffer for cache flush: " << shape.get_num_buffer()
+            << std::endl;
+  printf(
+      "hbm access bytes: %.3fMB, cache access bytes: %.3fMB, cache/hbm= %.2f\n",
+      shape.get_kv_bytes_no_repeat() / 1000000.0f,
+      shape.get_kv_bytes() / 1000000.0f,
+      float(shape.get_kv_bytes()) / shape.get_kv_bytes_no_repeat());
+  std::cout << "min duration: " << min << " us, " << "max duration: " << max
+            << " us, " << "average duration: " << avg
+            << " us, io size: " << shape.get_io_size() / 1000000.0f << " MB, "
+            << "max hbm bandwidth: " << hbm_bw  << " GB/s, " 
+            << "max l3 bandwidth: " << l3_bw  << " GB/s, " 
+            << " Tflops: " << flops
+            << std::endl;
+}
+
 int main(int argc, char *argv[]) {
 
   // fixed template parameters
@@ -318,6 +422,10 @@ int main(int argc, char *argv[]) {
       cxxopts::value<uint32_t>()->default_value("128"))(
       "sl,context_len", "context length",
       cxxopts::value<uint32_t>()->default_value("512"))(
+      "loop", "loop num to run",
+      cxxopts::value<uint32_t>()->default_value("10"))(
+      "warm", "warm num to run",
+      cxxopts::value<uint32_t>()->default_value("3"))(
       "ps,partition_size", "partition size",
       cxxopts::value<uint32_t>()->default_value("512"))("h,help",
                                                         "Print usage");
@@ -341,6 +449,10 @@ int main(int argc, char *argv[]) {
       (context_len + partition_size - 1) / partition_size;
   uint32_t max_blocks_per_seq = (context_len + block_size - 1) / block_size;
   uint32_t num_queries_per_tokens = num_heads / num_kv_heads;
+  uint32_t num_iters = result["loop"].as<uint32_t>();
+  uint32_t num_warm = result["warm"].as<uint32_t>();
+
+  uint32_t num_blocks = num_seqs * max_blocks_per_seq;
 
   // init tensors
   torch::Tensor max_logits =
@@ -380,8 +492,10 @@ int main(int argc, char *argv[]) {
 
   // Initialize tensors
   context_lens.fill_(context_len);
-  // block_tables[0] =
-  //     torch::arange(0, max_blocks_per_seq, torch::kInt).to(torch::kXPU);
+  for (int i = 0; i < num_seqs; ++i) {
+    block_tables[i] =
+        torch::arange(0, max_blocks_per_seq, torch::kInt).to(torch::kXPU);
+  }
   init_query(query);
   // for (int i = 0; i < num_blocks; ++i) {
   //   key_cache[i].fill_(i + 1);
@@ -434,35 +548,65 @@ int main(int argc, char *argv[]) {
   int64_t r_start = 0, r_end = r_start + 16;
   int64_t c_start = 0, c_end = c_start + 16;
   
+  if (false) {
 
-  dispatch_paged_attention<T, U, arch_tag>(
-      head_size, block_size, max_logits_ptr, exp_sums_ptr,
-      reinterpret_cast<T *>(output_ptr), reinterpret_cast<T *>(query_ptr),
-      reinterpret_cast<T *>(key_cache_ptr),
-      reinterpret_cast<T *>(value_cache_ptr), alibi_slopes_ptr,
-      reinterpret_cast<T *>(tem_output_ptr),
-      reinterpret_cast<U *>(block_tables_ptr),
-      reinterpret_cast<U *>(context_lens_ptr), max_num_partitions,
-      num_queries_per_tokens, sm_scale, num_seqs, num_heads, num_kv_heads,
-      max_blocks_per_seq, softcap);
-  
-  // ref_scores = torch::ones_like(ref_scores).to(torch::kHalf);
-  auto ref_output =
-      ref_compute_out(ref_scores, value_cache, block_tables, partition_size);
+    dispatch_paged_attention<T, U, arch_tag>(
+        head_size, block_size, max_logits_ptr, exp_sums_ptr,
+        reinterpret_cast<T *>(output_ptr), reinterpret_cast<T *>(query_ptr),
+        reinterpret_cast<T *>(key_cache_ptr),
+        reinterpret_cast<T *>(value_cache_ptr), alibi_slopes_ptr,
+        reinterpret_cast<T *>(tem_output_ptr),
+        reinterpret_cast<U *>(block_tables_ptr),
+        reinterpret_cast<U *>(context_lens_ptr), max_num_partitions,
+        num_queries_per_tokens, sm_scale, num_seqs, num_heads, num_kv_heads,
+        max_blocks_per_seq, softcap);
+    
+    // ref_scores = torch::ones_like(ref_scores).to(torch::kHalf);
+    auto ref_output =
+        ref_compute_out(ref_scores, value_cache, block_tables, partition_size);
 
-  std::cout << "ref_output shape: " << ref_output.sizes()
-            << " dtype: " << ref_output.dtype() << std::endl;
+    std::cout << "ref_output shape: " << ref_output.sizes()
+              << " dtype: " << ref_output.dtype() << std::endl;
 
-  ref_output = ref_output.transpose(1, 2).contiguous();
-  print_tensor_slice(ref_output[0][0].to(torch::kFloat32), r_start, r_end, c_start, c_end);
-  
-  printf("\n\n---------------------------------------------\n\n");
+    ref_output = ref_output.transpose(1, 2).contiguous();
+    // print_tensor_slice(ref_output[0][0].to(torch::kFloat32), r_start, r_end, c_start, c_end);
+    
+    printf("\n\n---------------------------------------------\n\n");
 
-  auto output_trans = output.transpose(1, 2).contiguous();
-  print_tensor_slice(output_trans[0][0].to(torch::kFloat32), r_start, r_end,
-                     c_start, c_end);
-  // assert_allclose(tem_output.to(torch::kFloat32), ref_scores.to(torch::kFloat32));
-  assert_allclose(max_logits, ref_max_logits);
-  assert_allclose(exp_sums, ref_exp_sums);
-  assert_allclose(output_trans.to(torch::kFloat32), ref_output.to(torch::kFloat32));
+    auto output_trans = output.transpose(1, 2).contiguous();
+    // print_tensor_slice(output_trans[0][0].to(torch::kFloat32), r_start, r_end,
+    //                    c_start, c_end);
+    // assert_allclose(tem_output.to(torch::kFloat32), ref_scores.to(torch::kFloat32));
+    assert_allclose(max_logits, ref_max_logits);
+    assert_allclose(exp_sums, ref_exp_sums);
+    assert_allclose(output_trans.to(torch::kFloat32), ref_output.to(torch::kFloat32));
+  }
+
+  // performance test
+  //
+  std::vector<float> durations(num_iters, std::numeric_limits<double>::max());
+  auto unique_count_number = num_blocks;
+  Shape shape(num_seqs, num_heads, num_kv_heads, num_blocks, head_size,
+              context_len, context_len, max_blocks_per_seq, max_num_partitions,
+              block_size);
+
+  for (uint32_t i = 0; i < num_iters + num_warm; ++i) {
+    auto duration = dispatch_paged_attention<T, U, arch_tag>(
+        head_size, block_size, max_logits_ptr, exp_sums_ptr,
+        reinterpret_cast<T *>(output_ptr), reinterpret_cast<T *>(query_ptr),
+        reinterpret_cast<T *>(key_cache_ptr),
+        reinterpret_cast<T *>(value_cache_ptr), alibi_slopes_ptr,
+        reinterpret_cast<T *>(tem_output_ptr),
+        reinterpret_cast<U *>(block_tables_ptr),
+        reinterpret_cast<U *>(context_lens_ptr), max_num_partitions,
+        num_queries_per_tokens, sm_scale, num_seqs, num_heads, num_kv_heads,
+        max_blocks_per_seq, softcap);
+
+    printf("Iteration %d, duration: %.3f us\n", i, duration);
+
+    if (i >= num_warm) {
+      durations[i - num_warm] = duration;
+    }
+  }
+  print_perf(shape, durations);
 }

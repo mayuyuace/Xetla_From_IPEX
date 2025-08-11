@@ -1,6 +1,6 @@
 CXX = icpx
-# CXXFLAGS = -std=c++20 -O2 -fPIC -fsycl -fsycl-targets=spir64_gen
-CXXFLAGS = -std=c++20 -O0 -g -fPIC -fsycl -fsycl-targets=spir64_gen
+CXXFLAGS = -std=c++20 -O2 -fPIC -fsycl -fsycl-targets=spir64_gen
+# CXXFLAGS = -std=c++20 -O0 -g -fPIC -fsycl -fsycl-targets=spir64_gen
 AOTFLAGS = -Xsycl-target-backend=spir64_gen "-device pvc -options '-doubleGRF -vc-codegen -Xfinalizer -printregusage'"
 
 TORCH_DIR = /home/baodi/mount_space/pytorch/torch
@@ -13,7 +13,7 @@ INCLUDES = -I. -I$(CXXOPTS_PATH)/include -I$(TORCH_DIR)/include -I$(TORCH_DIR)/i
 LIBS = -L$(LIB_DIR) -ltorch -ltorch_xpu -ltorch_cpu -lc10 -lc10_xpu -Wl,-rpath,$(LIB_DIR)
 
 IPEX_XETLA_DIR = /home/baodi/dsk_workspace/vllm_ipex/csrc/gpu/aten/operators/xetla/kernels
-XETLA_INCLUDES = -I$(IPEX_XETLA_DIR)/include -I$(IPEX_XETLA_DIR)/SDP -I$(IPEX_XETLA_DIR)
+XETLA_INCLUDES = -I$(IPEX_XETLA_DIR)/include -I$(IPEX_XETLA_DIR)
 
 SRC = main.cpp
 OUT = test_paged_attn
