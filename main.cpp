@@ -474,10 +474,25 @@ int main(int argc, char *argv[]) {
   torch::Tensor query =
       torch::ones({num_seqs, num_heads, head_size}, torch::kHalf)
           .to(torch::kXPU);
+  // create more kv cache for test
+  std::vector<torch::Tensor> key_cache_list;
+  for (int i = 0; i < num_iters + num_warm; ++i) {
+    key_cache_list.push_back(
+        torch::randn({num_blocks, block_size, num_kv_heads, head_size},
+                     torch::kHalf)
+            .to(torch::kXPU));
+  }
   torch::Tensor key_cache =
       torch::randn({num_blocks, block_size, num_kv_heads, head_size},
                    torch::kHalf)
           .to(torch::kXPU);
+  std::vector<torch::Tensor> value_cache_list;
+  for (int i = 0; i < num_iters + num_warm; ++i) {
+    value_cache_list.push_back(
+        torch::randn({num_blocks, block_size, num_kv_heads, head_size},
+                     torch::kHalf)
+            .to(torch::kXPU));
+  }
   torch::Tensor value_cache =
       torch::randn({num_blocks, block_size, num_kv_heads, head_size},
                    torch::kHalf)
@@ -500,28 +515,6 @@ int main(int argc, char *argv[]) {
   // for (int i = 0; i < num_blocks; ++i) {
   //   key_cache[i].fill_(i + 1);
   // }
-
-  std::cout << "max_logits shape: " << max_logits.sizes()
-            << " dtype: " << max_logits.dtype() << std::endl;
-  std::cout << "exp_sums shape: " << exp_sums.sizes()
-            << " dtype: " << exp_sums.dtype() << std::endl;
-  std::cout << "output shape: " << output.sizes()
-            << " dtype: " << output.dtype() << std::endl;
-  std::cout << "tem_output shape: " << tem_output.sizes()
-            << " dtype: " << tem_output.dtype() << std::endl;
-  std::cout << "query shape: " << query.sizes() << " dtype: " << query.dtype()
-            << std::endl;
-  std::cout << "key_cache shape: " << key_cache.sizes()
-            << " dtype: " << key_cache.dtype() << std::endl;
-  std::cout << "value_cache shape: " << value_cache.sizes()
-            << " dtype: " << value_cache.dtype() << std::endl;
-  std::cout << "alibi_slopes shape: " << alibi_slopes.sizes()
-            << " dtype: " << alibi_slopes.dtype() << std::endl;
-  std::cout << "block_tables shape: " << block_tables.sizes()
-            << " dtype: " << block_tables.dtype() << std::endl;
-  std::cout << "context_lens shape: " << context_lens.sizes()
-            << " dtype: " << context_lens.dtype() << " content:" << context_lens
-            << std::endl;
 
   auto *query_ptr = query.data_ptr();
   auto *key_cache_ptr = key_cache.data_ptr();
@@ -549,7 +542,6 @@ int main(int argc, char *argv[]) {
   int64_t c_start = 0, c_end = c_start + 16;
   
   if (false) {
-
     dispatch_paged_attention<T, U, arch_tag>(
         head_size, block_size, max_logits_ptr, exp_sums_ptr,
         reinterpret_cast<T *>(output_ptr), reinterpret_cast<T *>(query_ptr),
@@ -587,22 +579,29 @@ int main(int argc, char *argv[]) {
   std::vector<float> durations(num_iters, std::numeric_limits<double>::max());
   auto unique_count_number = num_blocks;
   Shape shape(num_seqs, num_heads, num_kv_heads, num_blocks, head_size,
-              context_len, context_len, max_blocks_per_seq, max_num_partitions,
+              context_len, context_len, max_blocks_per_seq, unique_count_number,
               block_size);
 
   for (uint32_t i = 0; i < num_iters + num_warm; ++i) {
+    auto* key_cache_ptr_ = key_cache_list[i % (num_iters + num_warm)].data_ptr();
+    auto* value_cache_ptr_ =
+        value_cache_list[i % (num_iters + num_warm)].data_ptr();
     auto duration = dispatch_paged_attention<T, U, arch_tag>(
         head_size, block_size, max_logits_ptr, exp_sums_ptr,
         reinterpret_cast<T *>(output_ptr), reinterpret_cast<T *>(query_ptr),
-        reinterpret_cast<T *>(key_cache_ptr),
-        reinterpret_cast<T *>(value_cache_ptr), alibi_slopes_ptr,
+        reinterpret_cast<T *>(key_cache_ptr_),
+        reinterpret_cast<T *>(value_cache_ptr_), alibi_slopes_ptr,
         reinterpret_cast<T *>(tem_output_ptr),
         reinterpret_cast<U *>(block_tables_ptr),
         reinterpret_cast<U *>(context_lens_ptr), max_num_partitions,
         num_queries_per_tokens, sm_scale, num_seqs, num_heads, num_kv_heads,
         max_blocks_per_seq, softcap);
 
-    printf("Iteration %d, duration: %.3f us\n", i, duration);
+    auto key_size = key_cache_list[i % (num_iters + num_warm)].numel() * sizeof(T);
+    auto kv_size = key_size * 2; // key and value cache
+    printf("Iteration %d, duration: %.3f us, key size: %.3f MB, bandwidth: %.3f GB/s\n",
+           i, duration, kv_size / 1024 / 1024.0f,
+           kv_size / duration / 1000);
 
     if (i >= num_warm) {
       durations[i - num_warm] = duration;
