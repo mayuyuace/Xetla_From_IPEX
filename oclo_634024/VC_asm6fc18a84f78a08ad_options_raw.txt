@@ -1,0 +1,4 @@
+------------------------------------------------
+VC_asm6fc18a84f78a08ad_options_raw.txt
+------------------------------------------------
+-doubleGRF -vc-codegen -Xfinalizer -printregusage
