@@ -205,7 +205,7 @@ torch::Tensor ref_compute_out(torch::Tensor &scores, torch::Tensor &value_cache,
 
   uint32_t useful_blocks = (seq_len + block_size - 1) / block_size;
 
-  torch::Tensor output = torch::zeros({num_seqs, num_kv_heads, num_partitions,
+  torch::Tensor tem_output = torch::zeros({num_seqs, num_kv_heads, num_partitions,
                                        query_group_size, head_size},
                                       torch::kHalf)
                              .to(scores.device());
@@ -227,11 +227,11 @@ torch::Tensor ref_compute_out(torch::Tensor &scores, torch::Tensor &value_cache,
                 .contiguous();
 
         /* std::cout << "score_slice shape: " << score_slice.sizes() << std::endl; */
-        output[i][j][k] = torch::matmul(score_slice, value_partition);
+        tem_output[i][j][k] = torch::matmul(score_slice, value_partition);
       }
     }
   }
-  return output.transpose(2, 3).contiguous().view(
+  return tem_output.transpose(2, 3).contiguous().view(
       {num_seqs, num_heads, num_partitions, head_size});
 }
 
@@ -462,11 +462,15 @@ int main(int argc, char *argv[]) {
       torch::ones({num_seqs, num_heads, max_num_partitions}, torch::kFloat32)
           .to(torch::kXPU);
   torch::Tensor output =
+      torch::zeros({num_seqs, num_heads, head_size},
+                   torch::kHalf)
+          .to(torch::kXPU);
+  torch::Tensor tem_output =
       torch::zeros({num_seqs, num_heads, max_num_partitions, head_size},
                    torch::kHalf)
           .to(torch::kXPU);
-  // store temporary output
-  torch::Tensor tem_output =
+  // store debug output
+  torch::Tensor debug_output =
       torch::zeros({num_seqs, num_heads, max_num_partitions * partition_size},
                    torch::kHalf)
           .to(torch::kXPU);
@@ -523,6 +527,7 @@ int main(int argc, char *argv[]) {
   auto *exp_sums_ptr = exp_sums.data_ptr<float>();
   auto *output_ptr = output.data_ptr();
   auto *tem_output_ptr = tem_output.data_ptr();
+  auto *debug_output_ptr = debug_output.data_ptr();
   auto *alibi_slopes_ptr = alibi_slopes.data_ptr<float>();
   auto *block_tables_ptr = block_tables.data_ptr();
   auto *context_lens_ptr = context_lens.data_ptr();
@@ -544,34 +549,35 @@ int main(int argc, char *argv[]) {
   if (false) {
     dispatch_paged_attention<T, U, arch_tag>(
         head_size, block_size, max_logits_ptr, exp_sums_ptr,
-        reinterpret_cast<T *>(output_ptr), reinterpret_cast<T *>(query_ptr),
+        reinterpret_cast<T *>(output_ptr),
+        reinterpret_cast<T *>(tem_output_ptr), reinterpret_cast<T *>(query_ptr),
         reinterpret_cast<T *>(key_cache_ptr),
         reinterpret_cast<T *>(value_cache_ptr), alibi_slopes_ptr,
-        reinterpret_cast<T *>(tem_output_ptr),
+        reinterpret_cast<T *>(debug_output_ptr),
         reinterpret_cast<U *>(block_tables_ptr),
         reinterpret_cast<U *>(context_lens_ptr), max_num_partitions,
         num_queries_per_tokens, sm_scale, num_seqs, num_heads, num_kv_heads,
         max_blocks_per_seq, softcap);
     
     // ref_scores = torch::ones_like(ref_scores).to(torch::kHalf);
-    auto ref_output =
+    auto ref_tem_output =
         ref_compute_out(ref_scores, value_cache, block_tables, partition_size);
 
-    std::cout << "ref_output shape: " << ref_output.sizes()
-              << " dtype: " << ref_output.dtype() << std::endl;
+    std::cout << "ref_tem_output shape: " << ref_tem_output.sizes()
+              << " dtype: " << ref_tem_output.dtype() << std::endl;
 
-    ref_output = ref_output.transpose(1, 2).contiguous();
-    // print_tensor_slice(ref_output[0][0].to(torch::kFloat32), r_start, r_end, c_start, c_end);
+    ref_tem_output = ref_tem_output.transpose(1, 2).contiguous();
+    // print_tensor_slice(ref_tem_output[0][0].to(torch::kFloat32), r_start, r_end, c_start, c_end);
     
     printf("\n\n---------------------------------------------\n\n");
 
-    auto output_trans = output.transpose(1, 2).contiguous();
-    // print_tensor_slice(output_trans[0][0].to(torch::kFloat32), r_start, r_end,
+    auto tem_output_trans = tem_output.transpose(1, 2).contiguous();
+    // print_tensor_slice(tem_output_trans[0][0].to(torch::kFloat32), r_start, r_end,
     //                    c_start, c_end);
-    // assert_allclose(tem_output.to(torch::kFloat32), ref_scores.to(torch::kFloat32));
+    // assert_allclose(debug_output.to(torch::kFloat32), ref_scores.to(torch::kFloat32));
     assert_allclose(max_logits, ref_max_logits);
     assert_allclose(exp_sums, ref_exp_sums);
-    assert_allclose(output_trans.to(torch::kFloat32), ref_output.to(torch::kFloat32));
+    assert_allclose(tem_output_trans.to(torch::kFloat32), ref_tem_output.to(torch::kFloat32));
   }
 
   // performance test
@@ -588,23 +594,29 @@ int main(int argc, char *argv[]) {
         value_cache_list[i % (num_iters + num_warm)].data_ptr();
     auto duration = dispatch_paged_attention<T, U, arch_tag>(
         head_size, block_size, max_logits_ptr, exp_sums_ptr,
-        reinterpret_cast<T *>(output_ptr), reinterpret_cast<T *>(query_ptr),
+        reinterpret_cast<T *>(output_ptr),
+        reinterpret_cast<T *>(tem_output_ptr), reinterpret_cast<T *>(query_ptr),
         reinterpret_cast<T *>(key_cache_ptr_),
         reinterpret_cast<T *>(value_cache_ptr_), alibi_slopes_ptr,
-        reinterpret_cast<T *>(tem_output_ptr),
+        reinterpret_cast<T *>(debug_output_ptr),
         reinterpret_cast<U *>(block_tables_ptr),
         reinterpret_cast<U *>(context_lens_ptr), max_num_partitions,
         num_queries_per_tokens, sm_scale, num_seqs, num_heads, num_kv_heads,
         max_blocks_per_seq, softcap);
 
+    auto attn_time = duration[0];
+    auto reduce_time = duration[1];
+    auto total_time = attn_time + reduce_time;
+
     auto key_size = key_cache_list[i % (num_iters + num_warm)].numel() * sizeof(T);
     auto kv_size = key_size * 2; // key and value cache
-    printf("Iteration %d, duration: %.3f us, key size: %.3f MB, bandwidth: %.3f GB/s\n",
-           i, duration, kv_size / 1024 / 1024.0f,
-           kv_size / duration / 1000);
+    printf("Iteration %d, total_time: %.3f us, attn time: %.3f us, reduce time: %.3f us, key size: %.3f MB, bandwidth: %.3f GB/s\n",
+           i, attn_time + reduce_time, attn_time, reduce_time, 
+           kv_size / 1024 / 1024.0f,
+           kv_size / total_time / 1000);
 
     if (i >= num_warm) {
-      durations[i - num_warm] = duration;
+      durations[i - num_warm] = total_time;
     }
   }
   print_perf(shape, durations);
