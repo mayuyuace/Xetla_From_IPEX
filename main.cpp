@@ -181,10 +181,10 @@ auto ref_softmax(torch::Tensor &scores, uint32_t partition_size = 512, bool use_
         torch::Tensor max_indices;
         std::tie(ref_max_slice, max_indices) =
             torch::max(scores_view[i][j], /*dim=*/0, /*keepdim=*/false);
-        ref_max_logits[i][j] = ref_max_slice.item<float>();
+        ref_max_logits[i][j][0] = ref_max_slice.item<float>();
         scores_view[i][j] = torch::exp(scores_view[i][j] - ref_max_slice);
-        ref_exp_sums[i][j] = torch::sum(scores_view[i][j]);
-        scores_view[i][j] = scores_view[i][j] / ref_exp_sums[i][j];
+        ref_exp_sums[i][j][0] = torch::sum(scores_view[i][j]);
+        scores_view[i][j] = scores_view[i][j] / ref_exp_sums[i][j][0];
       }
     }
   }
@@ -584,13 +584,17 @@ int main(int argc, char *argv[]) {
     // ref_scores = torch::ones_like(ref_scores).to(torch::kHalf);
     auto ref_scores =
         ref_compute_score(query, key_cache, block_tables, context_lens);
+    std::cout << "ref_compute_score done" << std::endl;
     auto [ref_max_logits, ref_exp_sums] = ref_softmax(ref_scores, partition_size, false);
+    std::cout << "ref_softmax done" << std::endl;
     ref_scores = ref_scores.to(torch::kHalf);
 
-    int64_t r_start = 0, r_end = r_start + 16;
-    int64_t c_start = 0, c_end = c_start + 16;
     auto ref_tem_output =
         ref_compute_out(ref_scores, value_cache, block_tables, partition_size, false);
+    std::cout << "ref_compute_out done" << std::endl;
+    
+    int64_t r_start = 0, r_end = r_start + 16;
+    int64_t c_start = 0, c_end = c_start + 16;
 
     // ref_tem_output = ref_tem_output.transpose(1, 2).contiguous();
     // auto tem_output_trans = tem_output.transpose(1, 2).contiguous();
