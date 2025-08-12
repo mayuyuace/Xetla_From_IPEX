@@ -27,6 +27,16 @@ namespace gpu::xetla {
 namespace attention {
 constexpr float neg_infinity = INFINITY * -1;
 
+inline void SW_BARRIER() {
+#if __INTEL_LLVM_COMPILER >= 20250000
+#if defined(__SYCL_DEVICE_ONLY__)
+  __asm__ volatile("fence_sw" : : :);
+#endif // __SYCL_DEVICE_ONLY__
+#else
+  __ESIMD_NS::fence<__ESIMD_NS::fence_mask::sw_barrier>();
+#endif // __INTEL_LLVM_COMPILER >= 20250000
+}
+
 // Matrix-Vector Multiplication, which computes the matrix vector product.
 template <typename dtype, uint32_t N, typename mat_t, int dim>
 inline typename std::enable_if_t<

@@ -554,12 +554,12 @@ class paged_attention_kernel {
             key_tile_desc_t,
             msg_type::block_2d,
             arch_tag>;
-    using key_prefetch_payload_t = 
-        subgroup::prefetch_payload_t<
-            mem_desc_t<scalar_t, k_mem_layout, mem_space::global>,
-            key_tile_desc_t,
-            1,
-            arch_tag>;
+    // using key_prefetch_payload_t = 
+    //     subgroup::prefetch_payload_t<
+    //         mem_desc_t<scalar_t, k_mem_layout, mem_space::global>,
+    //         key_tile_desc_t,
+    //         1,
+    //         arch_tag>;
     
     using score_acc_tile_desc_t = subgroup::
         tile_desc_t<block_size, query_group_size, mma_sg_tile_size, query_group_size>;
@@ -595,8 +595,8 @@ class paged_attention_kernel {
       auto* cur_key_cache = args.key_cache;
       key_payload_t key_payload(
           cur_key_cache, boundary_x, boundary_y, pitch, start_x, start_y);
-      key_prefetch_payload_t key_prefetch_payload(
-          cur_key_cache, boundary_x, boundary_y, pitch, start_x, start_y);
+      // key_prefetch_payload_t key_prefetch_payload(
+      //     cur_key_cache, boundary_x, boundary_y, pitch, start_x, start_y);
 
       uint32_t boundary_query_y = query_group_size;
       uint32_t boundary_query_x = args.head_size;
@@ -620,13 +620,13 @@ class paged_attention_kernel {
           0);
 
 
-#pragma unroll
-      for (int i = 0; i < stages; i++) {
-        constexpr int key_update_stride = has_2d_ld_st ? head_size_stride : 1;
-        subgroup::tile_prefetch(key_prefetch_payload);
-        key_prefetch_payload.template update_tdesc<key_update_dir>(
-            key_update_stride);
-      }
+// #pragma unroll
+//       for (int i = 0; i < stages; i++) {
+//         constexpr int key_update_stride = has_2d_ld_st ? head_size_stride : 1;
+//         subgroup::tile_prefetch(key_prefetch_payload);
+//         key_prefetch_payload.template update_tdesc<key_update_dir>(
+//             key_update_stride);
+//       }
       
       score_acc_tile_t score_sub(0.0f);
 
@@ -637,7 +637,9 @@ class paged_attention_kernel {
         query_payload.template update_tdesc<query_update_dir>(head_size_stride);
         key_payload.template update_tdesc<key_update_dir>(head_size_stride);
         
+        SW_BARRIER();
         tile_mma::mma(score_sub, score_sub, mat_key, mat_query);
+        SW_BARRIER();
       }
       subgroup::tile_store(score_sub, score_payload);
       xetla_fence<memory_kind::shared_local>();
@@ -873,7 +875,9 @@ class paged_attention_kernel {
 
       exp_score_payload.template update_tdesc<exp_score_update_dir>(block_size);
 
+      SW_BARRIER();
       tile_mma::mma(mat_acc_out, mat_acc_out, mat_value, mat_exp_score);
+      SW_BARRIER();
     }
 
     out_tile_t mat_out;
@@ -921,9 +925,9 @@ class paged_attention_kernel {
     static const sycl::range<3> local_range = sycl::range<3>{1, 1, wg_size};
     sycl::range<3> group_range =
         sycl::range<3>{num_kv_heads, num_seqs, max_num_partitions};
-    /* printf("group_range: %zu, %zu, %zu local_range: %zu, %zu, %zu\n", */
-    /*        group_range[0], group_range[1], group_range[2], */
-    /*        local_range[0], local_range[1], local_range[2]); // Debugging output */
+    printf("group_range: %zu, %zu, %zu local_range: %zu, %zu, %zu\n",
+           group_range[0], group_range[1], group_range[2],
+           local_range[0], local_range[1], local_range[2]); // Debugging output */
     return sycl::nd_range<3>{group_range * local_range, local_range};
   };
 
