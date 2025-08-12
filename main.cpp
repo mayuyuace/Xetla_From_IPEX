@@ -548,8 +548,11 @@ int main(int argc, char *argv[]) {
   // Initialize tensors
   context_lens.fill_(context_len);
   for (int i = 0; i < num_seqs; ++i) {
-    block_tables[i] =
-        torch::arange(0, max_blocks_per_seq, torch::kInt).to(torch::kXPU);
+    for (int j = 0; j < max_blocks_per_seq; ++j) {
+      block_tables[i][j] = i * max_blocks_per_seq + j;
+    }
+    // block_tables[i] =
+    //     torch::arange(0, max_blocks_per_seq, torch::kInt).to(torch::kXPU);
   }
   init_query(query);
   // for (int i = 0; i < num_blocks; ++i) {
