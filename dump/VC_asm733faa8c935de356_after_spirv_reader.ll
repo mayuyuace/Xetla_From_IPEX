@@ -1,5 +1,5 @@
 ; ------------------------------------------------
-; VC_asm8235f094081f4ee6_after_spirv_reader.ll
+; VC_asm733faa8c935de356_after_spirv_reader.ll
 ; ------------------------------------------------
 ; ModuleID = 'Deserialized LLVM Module'
 target datalayout = "e-p:64:64:64-i1:8:8-i8:8:8-i16:16:16-i32:32:32-i64:64:64-f32:32:32-f64:64:64-v16:16:16-v24:32:32-v32:32:32-v48:64:64-v64:64:64-v96:128:128-v128:128:128-v192:256:256-v256:256:256-v512:512:512-v1024:1024:1024"
@@ -37,10 +37,6 @@ declare void @llvm.genx.lsc.store.slm.v32i1.v32i32.v32i64(<32 x i1>, i8, i8, i8,
 
 declare void @llvm.genx.lsc.fence.v16i1(<16 x i1>, i8, i8, i8) #0
 
-declare void @llvm.genx.raw.send2.noresult.v16i1.v16i32(i8, i8, <16 x i1>, i8, i8, i32, i32, <16 x i32>) #0
-
-declare void @llvm.genx.nbarrier(i8, i8, i8) #0
-
 declare <256 x i16> @llvm.genx.raw.send2.v256i16.v16i1.v16i32(i8, i8, <16 x i1>, i8, i8, i8, i32, i32, <16 x i32>, <256 x i16>) #0
 
 declare <128 x i32> @llvm.genx.raw.send2.v128i32.v16i1.v16i32(i8, i8, <16 x i1>, i8, i8, i8, i32, i32, <16 x i32>, <128 x i32>) #0
@@ -62,6 +58,10 @@ declare <512 x float> @llvm.genx.wrregionf.v512f32.v128f32.i16.v128i1(<512 x flo
 declare <1 x i16> @llvm.genx.rdregioni.v1i16.v1024i16.i16(<1024 x i16>, i32, i32, i32, i16, i32) #0
 
 declare void @llvm.genx.dummy.mov(i16) #0
+
+declare void @llvm.genx.raw.send2.noresult.v16i1.v16i32(i8, i8, <16 x i1>, i8, i8, i32, i32, <16 x i32>) #0
+
+declare void @llvm.genx.nbarrier(i8, i8, i8) #0
 
 declare <16 x float> @llvm.genx.rdregionf.v16f32.v512f32.i16(<512 x float>, i32, i32, i32, i16, i32) #0
 
@@ -97,10 +97,6 @@ declare <128 x half> @llvm.genx.rdregionf.v128f16.v512f16.i16(<512 x half>, i32,
 
 declare void @llvm.genx.lsc.store.stateless.v1i1.v1i64.v32i64(<1 x i1>, i8, i8, i8, i16, i32, i8, i8, i8, i8, <1 x i64>, <32 x i64>, i32) #0
 
-declare <16 x float> @llvm.genx.rdregionf.v16f32.v128f32.i16(<128 x float>, i32, i32, i32, i16, i32) #0
-
-declare <128 x half> @llvm.genx.wrregionf.v128f16.v16f16.i16.v16i1(<128 x half>, <16 x half>, i32, i32, i32, i16, i32, <16 x i1>) #0
-
 declare <32 x i64> @llvm.genx.lsc.load.merge.slm.v32i64.v32i1.v32i32(<32 x i1>, i8, i8, i8, i16, i32, i8, i8, i8, i8, <32 x i32>, i32, <32 x i64>) #0
 
 declare <512 x half> @llvm.genx.wrregionf.v512f16.v128f16.i16.v128i1(<512 x half>, <128 x half>, i32, i32, i32, i16, i32, <128 x i1>) #0
@@ -110,6 +106,10 @@ declare <1024 x half> @llvm.genx.wrregionf.v1024f16.v256f16.i16.v256i1(<1024 x h
 declare <256 x half> @llvm.genx.rdregionf.v256f16.v1024f16.i16(<1024 x half>, i32, i32, i32, i16, i32) #0
 
 declare <1 x i16> @llvm.genx.rdregioni.v1i16.v256i16.i16(<256 x i16>, i32, i32, i32, i16, i32) #0
+
+declare <16 x float> @llvm.genx.rdregionf.v16f32.v128f32.i16(<128 x float>, i32, i32, i32, i16, i32) #0
+
+declare <128 x half> @llvm.genx.wrregionf.v128f16.v16f16.i16.v16i1(<128 x half>, <16 x half>, i32, i32, i32, i16, i32, <16 x i1>) #0
 
 declare void @llvm.genx.raw.sends2.noresult.v16i1.v16i32.v128i16(i8, i8, <16 x i1>, i8, i8, i8, i32, i32, <16 x i32>, <128 x i16>) #0
 
@@ -226,14 +226,14 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %67
 
 67:                                               ; preds = %181, %65
-  %.sroa.0850.0 = phi <16 x i32> [ undef, %65 ], [ %.esimd7, %181 ]
-  %.sroa.0830.0 = phi <128 x i32> [ undef, %65 ], [ %.sroa.0830.2, %181 ]
+  %.sroa.0851.0 = phi <16 x i32> [ undef, %65 ], [ %.esimd7, %181 ]
+  %.sroa.0831.0 = phi <128 x i32> [ undef, %65 ], [ %.sroa.0831.2, %181 ]
   %.sroa.0.0 = phi <16 x i32> [ undef, %65 ], [ %.esimd55, %181 ]
-  %.sroa.0563.0 = phi <32 x i32> [ undef, %65 ], [ %.sroa.0563.2, %181 ]
-  %.sroa.0578.0 = phi <2048 x half> [ undef, %65 ], [ %.sroa.0578.1, %181 ]
-  %.sroa.0581.0 = phi <256 x half> [ undef, %65 ], [ %.sroa.0581.1, %181 ]
+  %.sroa.0564.0 = phi <32 x i32> [ undef, %65 ], [ %.sroa.0564.2, %181 ]
+  %.sroa.0579.0 = phi <2048 x half> [ undef, %65 ], [ %.sroa.0579.1, %181 ]
+  %.sroa.0582.0 = phi <256 x half> [ undef, %65 ], [ %.sroa.0582.1, %181 ]
   %68 = phi <256 x i16> [ undef, %65 ], [ %154, %181 ]
-  %.sroa.0688.0 = phi <128 x i32> [ undef, %65 ], [ %.sroa.0688.1, %181 ]
+  %.sroa.0689.0 = phi <128 x i32> [ undef, %65 ], [ %.sroa.0689.1, %181 ]
   %69 = phi i32 [ %66, %65 ], [ %182, %181 ]
   %70 = icmp slt i32 %69, %63
   br i1 %70, label %71, label %_ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EE13compute_scoreERNSB_11arguments_tE.exit
@@ -247,7 +247,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   %77 = ashr i32 %57, 1
   %78 = ptrtoint i8 addrspace(4)* %23 to i64
   %79 = insertelement <1 x i64> undef, i64 %78, i32 0
-  %80 = bitcast <16 x i32> %.sroa.0850.0 to <8 x i64>
+  %80 = bitcast <16 x i32> %.sroa.0851.0 to <8 x i64>
   %.esimd1 = call <8 x i64> @llvm.genx.wrregioni.v8i64.v1i64.i16.v1i1(<8 x i64> %80, <1 x i64> %79, i32 0, i32 1, i32 1, i16 0, i32 0, <1 x i1> <i1 true>)
   %81 = bitcast <8 x i64> %.esimd1 to <16 x i32>
   %82 = shl i32 %39, 8
@@ -268,7 +268,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %91
 
 91:                                               ; preds = %114, %71
-  %.sroa.0830.1 = phi <128 x i32> [ %.sroa.0830.0, %71 ], [ %.sroa.0830.6, %114 ]
+  %.sroa.0831.1 = phi <128 x i32> [ %.sroa.0831.0, %71 ], [ %.sroa.0831.6, %114 ]
   %92 = phi i32 [ 0, %71 ], [ %115, %114 ]
   %93 = phi i32 [ 0, %71 ], [ %116, %114 ]
   %94 = icmp ult i32 %93, 2
@@ -281,7 +281,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %99
 
 99:                                               ; preds = %103, %95
-  %.sroa.0830.6 = phi <128 x i32> [ %.sroa.0830.1, %95 ], [ %.esimd48, %103 ]
+  %.sroa.0831.6 = phi <128 x i32> [ %.sroa.0831.1, %95 ], [ %.esimd48, %103 ]
   %100 = phi i32 [ 0, %95 ], [ %113, %103 ]
   %101 = phi i32 [ 0, %95 ], [ %112, %103 ]
   %102 = icmp ult i32 %100, 4
@@ -289,11 +289,11 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
 
 103:                                              ; preds = %99
   %104 = trunc i32 %100 to i16
-  %.esimd8 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v128i32.i16(<128 x i32> %.sroa.0830.6, i32 16, i32 16, i32 1, i16 %97, i32 16)
+  %.esimd8 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v128i32.i16(<128 x i32> %.sroa.0831.6, i32 16, i32 16, i32 1, i16 %97, i32 16)
   %.esimd9 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v64i32.i16(<64 x i32> %.esimd8, i32 16, i32 16, i32 1, i16 0, i32 16)
   %105 = shl nuw nsw i16 %104, 6, !spirv.Decorations !16
   %.esimd10 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.esimd9, <16 x i32> %.esimd7, i32 16, i32 16, i32 1, i16 %105, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
-  %.esimd11 = call <128 x i32> @llvm.genx.wrregioni.v128i32.v64i32.i16.v64i1(<128 x i32> %.sroa.0830.6, <64 x i32> %.esimd10, i32 16, i32 16, i32 1, i16 %97, i32 16, <64 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd11 = call <128 x i32> @llvm.genx.wrregioni.v128i32.v64i32.i16.v64i1(<128 x i32> %.sroa.0831.6, <64 x i32> %.esimd10, i32 16, i32 16, i32 1, i16 %97, i32 16, <64 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
   %.esimd12 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v128i32.i16(<128 x i32> %.esimd11, i32 16, i32 16, i32 1, i16 %97, i32 16)
   %.esimd13 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v64i32.i16(<64 x i32> %.esimd12, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd14 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd13, i32 16, i32 16, i32 1, i16 %105, i32 16)
@@ -368,7 +368,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %129
 
 129:                                              ; preds = %148, %117
-  %.sroa.0563.1 = phi <32 x i32> [ %.sroa.0563.0, %117 ], [ %.sroa.0563.5, %148 ]
+  %.sroa.0564.1 = phi <32 x i32> [ %.sroa.0564.0, %117 ], [ %.sroa.0564.5, %148 ]
   %130 = phi i32 [ 0, %117 ], [ %149, %148 ]
   %131 = phi i1 [ true, %117 ], [ false, %148 ]
   br i1 %131, label %132, label %150
@@ -377,7 +377,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %133
 
 133:                                              ; preds = %137, %132
-  %.sroa.0563.5 = phi <32 x i32> [ %.sroa.0563.1, %132 ], [ %.esimd74, %137 ]
+  %.sroa.0564.5 = phi <32 x i32> [ %.sroa.0564.1, %132 ], [ %.esimd74, %137 ]
   %134 = phi i32 [ 0, %132 ], [ %147, %137 ]
   %135 = phi i32 [ 0, %132 ], [ %146, %137 ]
   %136 = icmp ult i32 %134, 2
@@ -386,7 +386,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
 137:                                              ; preds = %133
   %138 = trunc i32 %134 to i16
   %139 = shl nuw nsw i16 %138, 6, !spirv.Decorations !16
-  %.esimd56 = call <32 x i32> @llvm.genx.wrregioni.v32i32.v16i32.i16.v16i1(<32 x i32> %.sroa.0563.5, <16 x i32> %.esimd55, i32 16, i32 16, i32 1, i16 %139, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd56 = call <32 x i32> @llvm.genx.wrregioni.v32i32.v16i32.i16.v16i1(<32 x i32> %.sroa.0564.5, <16 x i32> %.esimd55, i32 16, i32 16, i32 1, i16 %139, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
   %.esimd57 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v32i32.i16(<32 x i32> %.esimd56, i32 16, i32 16, i32 1, i16 %139, i32 16)
   %.esimd58 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd57, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd59 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd58, <1 x i32> <i32 1807>, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
@@ -425,13 +425,13 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %153
 
 153:                                              ; preds = %262, %150
-  %.sroa.0830.2 = phi <128 x i32> [ %.sroa.0830.1, %150 ], [ %.sroa.0830.4, %262 ]
-  %.sroa.0551.0 = phi <512 x float> [ zeroinitializer, %150 ], [ %.sroa.0551.1, %262 ]
-  %.sroa.0563.2 = phi <32 x i32> [ %.sroa.0563.1, %150 ], [ %.sroa.0563.4, %262 ]
-  %.sroa.0578.1 = phi <2048 x half> [ %.sroa.0578.0, %150 ], [ %.sroa.0578.2, %262 ]
-  %.sroa.0581.1 = phi <256 x half> [ %.sroa.0581.0, %150 ], [ %.sroa.0581.2, %262 ]
+  %.sroa.0831.2 = phi <128 x i32> [ %.sroa.0831.1, %150 ], [ %.sroa.0831.4, %262 ]
+  %.sroa.0552.0 = phi <512 x float> [ zeroinitializer, %150 ], [ %.sroa.0552.1, %262 ]
+  %.sroa.0564.2 = phi <32 x i32> [ %.sroa.0564.1, %150 ], [ %.sroa.0564.4, %262 ]
+  %.sroa.0579.1 = phi <2048 x half> [ %.sroa.0579.0, %150 ], [ %.sroa.0579.2, %262 ]
+  %.sroa.0582.1 = phi <256 x half> [ %.sroa.0582.0, %150 ], [ %.sroa.0582.2, %262 ]
   %154 = phi <256 x i16> [ %68, %150 ], [ %191, %262 ]
-  %.sroa.0688.1 = phi <128 x i32> [ %.sroa.0688.0, %150 ], [ %.sroa.0688.2, %262 ]
+  %.sroa.0689.1 = phi <128 x i32> [ %.sroa.0689.0, %150 ], [ %.sroa.0689.2, %262 ]
   %155 = phi i32 [ 0, %150 ], [ %265, %262 ]
   %156 = icmp ult i32 %155, 4
   br i1 %156, label %.preheader5, label %157
@@ -469,7 +469,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   %174 = add <32 x i32> %173, %152
   %175 = shufflevector <32 x i32> %174, <32 x i32> undef, <32 x i32> zeroinitializer
   %176 = add <32 x i32> %175, <i32 0, i32 8, i32 16, i32 24, i32 32, i32 40, i32 48, i32 56, i32 2048, i32 2056, i32 2064, i32 2072, i32 2080, i32 2088, i32 2096, i32 2104, i32 4096, i32 4104, i32 4112, i32 4120, i32 4128, i32 4136, i32 4144, i32 4152, i32 6144, i32 6152, i32 6160, i32 6168, i32 6176, i32 6184, i32 6192, i32 6200>
-  %.esimd75 = call <128 x float> @llvm.genx.rdregionf.v128f32.v512f32.i16(<512 x float> %.sroa.0551.0, i32 0, i32 128, i32 1, i16 %164, i32 0)
+  %.esimd75 = call <128 x float> @llvm.genx.rdregionf.v128f32.v512f32.i16(<512 x float> %.sroa.0552.0, i32 0, i32 128, i32 1, i16 %164, i32 0)
   %177 = trunc i32 %166 to i16
   %178 = shl nuw nsw i16 %177, 6, !spirv.Decorations !16
   %.esimd76 = call <64 x float> @llvm.genx.rdregionf.v64f32.v128f32.i16(<128 x float> %.esimd75, i32 0, i32 64, i32 1, i16 %178, i32 0)
@@ -480,13 +480,11 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
 
 181:                                              ; preds = %158
   call void @llvm.genx.lsc.fence.v16i1(<16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 3, i8 0, i8 0)
-  call void @llvm.genx.raw.send2.noresult.v16i1.v16i32(i8 0, i8 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 1, i8 3, i32 3, i32 33554436, <16 x i32> %.esimd)
-  call void @llvm.genx.nbarrier(i8 0, i8 0, i8 0)
   %182 = add i32 %69, 8
   br label %67
 
 183:                                              ; preds = %186, %.preheader5
-  %.sroa.0563.3 = phi <32 x i32> [ %.esimd80, %186 ], [ %.sroa.0563.2, %.preheader5 ]
+  %.sroa.0564.3 = phi <32 x i32> [ %.esimd80, %186 ], [ %.sroa.0564.2, %.preheader5 ]
   %184 = phi i32 [ %189, %186 ], [ 0, %.preheader5 ]
   %185 = icmp ult i32 %184, 2
   br i1 %185, label %186, label %.preheader4
@@ -497,15 +495,15 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
 186:                                              ; preds = %183
   %187 = trunc i32 %184 to i16
   %188 = shl nuw nsw i16 %187, 6, !spirv.Decorations !16
-  %.esimd77 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v32i32.i16(<32 x i32> %.sroa.0563.3, i32 16, i32 16, i32 1, i16 %188, i32 16)
+  %.esimd77 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v32i32.i16(<32 x i32> %.sroa.0564.3, i32 16, i32 16, i32 1, i16 %188, i32 16)
   %.esimd78 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd77, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd79 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd78, <1 x i32> <i32 67343>, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
-  %.esimd80 = call <32 x i32> @llvm.genx.wrregioni.v32i32.v16i32.i16.v16i1(<32 x i32> %.sroa.0563.3, <16 x i32> %.esimd79, i32 16, i32 16, i32 1, i16 %188, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd80 = call <32 x i32> @llvm.genx.wrregioni.v32i32.v16i32.i16.v16i1(<32 x i32> %.sroa.0564.3, <16 x i32> %.esimd79, i32 16, i32 16, i32 1, i16 %188, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
   %189 = add nuw nsw i32 %184, 1, !spirv.Decorations !16
   br label %183, !llvm.loop !25
 
 190:                                              ; preds = %194, %.preheader4
-  %.sroa.0581.2 = phi <256 x half> [ %195, %194 ], [ %.sroa.0581.1, %.preheader4 ]
+  %.sroa.0582.2 = phi <256 x half> [ %195, %194 ], [ %.sroa.0582.1, %.preheader4 ]
   %191 = phi <256 x i16> [ %.esimd83, %194 ], [ %154, %.preheader4 ]
   %192 = phi i1 [ false, %194 ], [ true, %.preheader4 ]
   %193 = phi i16 [ 128, %194 ], [ 0, %.preheader4 ]
@@ -515,7 +513,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %199
 
 194:                                              ; preds = %190
-  %.esimd81 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v32i32.i16(<32 x i32> %.sroa.0563.3, i32 16, i32 16, i32 1, i16 %193, i32 16)
+  %.esimd81 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v32i32.i16(<32 x i32> %.sroa.0564.3, i32 16, i32 16, i32 1, i16 %193, i32 16)
   %.esimd82 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd81, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd83 = call <256 x i16> @llvm.genx.raw.send2.v256i16.v16i1.v16i32(i8 0, i8 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 1, i8 8, i8 15, i32 0, i32 42467843, <16 x i32> %.esimd82, <256 x i16> %191)
   %195 = bitcast <256 x i16> %.esimd83 to <256 x half>
@@ -527,9 +525,9 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %190, !llvm.loop !26
 
 199:                                              ; preds = %216, %.preheader3
-  %.sroa.0830.3 = phi <128 x i32> [ %.sroa.0830.5, %216 ], [ %.sroa.0830.2, %.preheader3 ]
-  %.sroa.0578.2 = phi <2048 x half> [ %.sroa.0578.3, %216 ], [ %.sroa.0578.1, %.preheader3 ]
-  %.sroa.0688.2 = phi <128 x i32> [ %.sroa.0688.3, %216 ], [ %.sroa.0688.1, %.preheader3 ]
+  %.sroa.0831.3 = phi <128 x i32> [ %.sroa.0831.5, %216 ], [ %.sroa.0831.2, %.preheader3 ]
+  %.sroa.0579.2 = phi <2048 x half> [ %.sroa.0579.3, %216 ], [ %.sroa.0579.1, %.preheader3 ]
+  %.sroa.0689.2 = phi <128 x i32> [ %.sroa.0689.3, %216 ], [ %.sroa.0689.1, %.preheader3 ]
   %200 = phi i32 [ %217, %216 ], [ 0, %.preheader3 ]
   %201 = icmp ult i32 %200, 2
   br i1 %201, label %202, label %.preheader2
@@ -544,7 +542,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %206
 
 206:                                              ; preds = %209, %202
-  %.sroa.0830.5 = phi <128 x i32> [ %.sroa.0830.3, %202 ], [ %.esimd94, %209 ]
+  %.sroa.0831.5 = phi <128 x i32> [ %.sroa.0831.3, %202 ], [ %.esimd94, %209 ]
   %207 = phi i32 [ 0, %202 ], [ %212, %209 ]
   %208 = icmp ult i32 %207, 4
   br i1 %208, label %209, label %.preheader
@@ -554,22 +552,22 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
 
 209:                                              ; preds = %206
   %210 = trunc i32 %207 to i16
-  %.esimd86 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v128i32.i16(<128 x i32> %.sroa.0830.5, i32 16, i32 16, i32 1, i16 %205, i32 16)
+  %.esimd86 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v128i32.i16(<128 x i32> %.sroa.0831.5, i32 16, i32 16, i32 1, i16 %205, i32 16)
   %.esimd87 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v64i32.i16(<64 x i32> %.esimd86, i32 16, i32 16, i32 1, i16 0, i32 16)
   %211 = shl nuw nsw i16 %210, 6, !spirv.Decorations !16
   %.esimd88 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd87, i32 16, i32 16, i32 1, i16 %211, i32 16)
   %.esimd89 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd88, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd90 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd89, <1 x i32> <i32 3847>, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
-  %.esimd91 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v128i32.i16(<128 x i32> %.sroa.0830.5, i32 16, i32 16, i32 1, i16 %205, i32 16)
+  %.esimd91 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v128i32.i16(<128 x i32> %.sroa.0831.5, i32 16, i32 16, i32 1, i16 %205, i32 16)
   %.esimd92 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v64i32.i16(<64 x i32> %.esimd91, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd93 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.esimd92, <16 x i32> %.esimd90, i32 16, i32 16, i32 1, i16 %211, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
-  %.esimd94 = call <128 x i32> @llvm.genx.wrregioni.v128i32.v64i32.i16.v64i1(<128 x i32> %.sroa.0830.5, <64 x i32> %.esimd93, i32 16, i32 16, i32 1, i16 %205, i32 16, <64 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd94 = call <128 x i32> @llvm.genx.wrregioni.v128i32.v64i32.i16.v64i1(<128 x i32> %.sroa.0831.5, <64 x i32> %.esimd93, i32 16, i32 16, i32 1, i16 %205, i32 16, <64 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
   %212 = add nuw nsw i32 %207, 1, !spirv.Decorations !16
   br label %206, !llvm.loop !27
 
 213:                                              ; preds = %218, %.preheader
-  %.sroa.0578.3 = phi <2048 x half> [ %.esimd100, %218 ], [ %.sroa.0578.2, %.preheader ]
-  %.sroa.0688.3 = phi <128 x i32> [ %.esimd99, %218 ], [ %.sroa.0688.2, %.preheader ]
+  %.sroa.0579.3 = phi <2048 x half> [ %.esimd100, %218 ], [ %.sroa.0579.2, %.preheader ]
+  %.sroa.0689.3 = phi <128 x i32> [ %.esimd99, %218 ], [ %.sroa.0689.2, %.preheader ]
   %214 = phi i32 [ %228, %218 ], [ 0, %.preheader ]
   %215 = icmp ult i32 %214, 4
   br i1 %215, label %218, label %216
@@ -580,17 +578,17 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
 
 218:                                              ; preds = %213
   %219 = trunc i32 %214 to i16
-  %.esimd95 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v128i32.i16(<128 x i32> %.sroa.0830.5, i32 16, i32 16, i32 1, i16 %205, i32 16)
+  %.esimd95 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v128i32.i16(<128 x i32> %.sroa.0831.5, i32 16, i32 16, i32 1, i16 %205, i32 16)
   %.esimd96 = call <64 x i32> @llvm.genx.rdregioni.v64i32.v64i32.i16(<64 x i32> %.esimd95, i32 16, i32 16, i32 1, i16 0, i32 16)
   %220 = shl nuw nsw i16 %219, 6, !spirv.Decorations !16
   %.esimd97 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd96, i32 16, i32 16, i32 1, i16 %220, i32 16)
   %.esimd98 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd97, i32 16, i32 16, i32 1, i16 0, i32 16)
   %221 = or i32 %203, %214
-  %.esimd99 = call <128 x i32> @llvm.genx.raw.send2.v128i32.v16i1.v16i32(i8 0, i8 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 1, i8 8, i8 15, i32 0, i32 42501123, <16 x i32> %.esimd98, <128 x i32> %.sroa.0688.3)
+  %.esimd99 = call <128 x i32> @llvm.genx.raw.send2.v128i32.v16i1.v16i32(i8 0, i8 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 1, i8 8, i8 15, i32 0, i32 42501123, <16 x i32> %.esimd98, <128 x i32> %.sroa.0689.3)
   %222 = bitcast <128 x i32> %.esimd99 to <256 x half>
   %223 = trunc i32 %221 to i16
   %224 = shl nuw nsw i16 %223, 9, !spirv.Decorations !16
-  %.esimd100 = call <2048 x half> @llvm.genx.wrregionf.v2048f16.v256f16.i16.v256i1(<2048 x half> %.sroa.0578.3, <256 x half> %222, i32 0, i32 256, i32 1, i16 %224, i32 0, <256 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd100 = call <2048 x half> @llvm.genx.wrregionf.v2048f16.v256f16.i16.v256i1(<2048 x half> %.sroa.0579.3, <256 x half> %222, i32 0, i32 256, i32 1, i16 %224, i32 0, <256 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
   %.esimd101 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd98, i32 0, i32 1, i32 1, i16 20, i32 0)
   %225 = extractelement <1 x i32> %.esimd101, i32 0
   %226 = add nsw i32 %225, 8, !spirv.Decorations !14
@@ -600,7 +598,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %213, !llvm.loop !29
 
 229:                                              ; preds = %232, %.preheader2
-  %.sroa.0563.4 = phi <32 x i32> [ %.esimd109, %232 ], [ %.sroa.0563.3, %.preheader2 ]
+  %.sroa.0564.4 = phi <32 x i32> [ %.esimd109, %232 ], [ %.sroa.0564.3, %.preheader2 ]
   %230 = phi i32 [ %238, %232 ], [ 0, %.preheader2 ]
   %231 = icmp ult i32 %230, 2
   br i1 %231, label %232, label %.preheader1
@@ -611,21 +609,21 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
 232:                                              ; preds = %229
   %233 = trunc i32 %230 to i16
   %234 = shl nuw nsw i16 %233, 6, !spirv.Decorations !16
-  %.esimd103 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v32i32.i16(<32 x i32> %.sroa.0563.4, i32 16, i32 16, i32 1, i16 %234, i32 16)
+  %.esimd103 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v32i32.i16(<32 x i32> %.sroa.0564.4, i32 16, i32 16, i32 1, i16 %234, i32 16)
   %.esimd104 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd103, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd105 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd104, i32 0, i32 1, i32 1, i16 20, i32 0)
   %235 = extractelement <1 x i32> %.esimd105, i32 0
   %236 = add nsw i32 %235, 32, !spirv.Decorations !14
   %237 = insertelement <1 x i32> undef, i32 %236, i32 0
-  %.esimd106 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v32i32.i16(<32 x i32> %.sroa.0563.4, i32 16, i32 16, i32 1, i16 %234, i32 16)
+  %.esimd106 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v32i32.i16(<32 x i32> %.sroa.0564.4, i32 16, i32 16, i32 1, i16 %234, i32 16)
   %.esimd107 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd106, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd108 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd107, <1 x i32> %237, i32 0, i32 1, i32 1, i16 20, i32 0, <1 x i1> <i1 true>)
-  %.esimd109 = call <32 x i32> @llvm.genx.wrregioni.v32i32.v16i32.i16.v16i1(<32 x i32> %.sroa.0563.4, <16 x i32> %.esimd108, i32 16, i32 16, i32 1, i16 %234, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd109 = call <32 x i32> @llvm.genx.wrregioni.v32i32.v16i32.i16.v16i1(<32 x i32> %.sroa.0564.4, <16 x i32> %.esimd108, i32 16, i32 16, i32 1, i16 %234, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
   %238 = add nuw nsw i32 %230, 1, !spirv.Decorations !16
   br label %229, !llvm.loop !30
 
 239:                                              ; preds = %242, %.preheader1
-  %.sroa.0830.4 = phi <128 x i32> [ %.esimd116, %242 ], [ %.sroa.0830.3, %.preheader1 ]
+  %.sroa.0831.4 = phi <128 x i32> [ %.esimd116, %242 ], [ %.sroa.0831.3, %.preheader1 ]
   %240 = phi i32 [ %248, %242 ], [ 0, %.preheader1 ]
   %241 = icmp ult i32 %240, 8
   br i1 %241, label %242, label %249
@@ -633,16 +631,16 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
 242:                                              ; preds = %239
   %243 = trunc i32 %240 to i16
   %244 = shl nuw nsw i16 %243, 6, !spirv.Decorations !16
-  %.esimd110 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v128i32.i16(<128 x i32> %.sroa.0830.4, i32 16, i32 16, i32 1, i16 %244, i32 16)
+  %.esimd110 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v128i32.i16(<128 x i32> %.sroa.0831.4, i32 16, i32 16, i32 1, i16 %244, i32 16)
   %.esimd111 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd110, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd112 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd111, i32 0, i32 1, i32 1, i16 20, i32 0)
   %245 = extractelement <1 x i32> %.esimd112, i32 0
   %246 = add nsw i32 %245, 16, !spirv.Decorations !14
   %247 = insertelement <1 x i32> undef, i32 %246, i32 0
-  %.esimd113 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v128i32.i16(<128 x i32> %.sroa.0830.4, i32 16, i32 16, i32 1, i16 %244, i32 16)
+  %.esimd113 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v128i32.i16(<128 x i32> %.sroa.0831.4, i32 16, i32 16, i32 1, i16 %244, i32 16)
   %.esimd114 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd113, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd115 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd114, <1 x i32> %247, i32 0, i32 1, i32 1, i16 20, i32 0, <1 x i1> <i1 true>)
-  %.esimd116 = call <128 x i32> @llvm.genx.wrregioni.v128i32.v16i32.i16.v16i1(<128 x i32> %.sroa.0830.4, <16 x i32> %.esimd115, i32 16, i32 16, i32 1, i16 %244, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd116 = call <128 x i32> @llvm.genx.wrregioni.v128i32.v16i32.i16.v16i1(<128 x i32> %.sroa.0831.4, <16 x i32> %.esimd115, i32 16, i32 16, i32 1, i16 %244, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
   %248 = add nuw nsw i32 %240, 1, !spirv.Decorations !16
   br label %239, !llvm.loop !31
 
@@ -651,7 +649,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %250
 
 250:                                              ; preds = %253, %249
-  %.sroa.0551.1 = phi <512 x float> [ %.sroa.0551.0, %249 ], [ %.esimd126, %253 ]
+  %.sroa.0552.1 = phi <512 x float> [ %.sroa.0552.0, %249 ], [ %.esimd126, %253 ]
   %251 = phi i32 [ 0, %249 ], [ %261, %253 ]
   %252 = icmp ult i32 %251, 4
   br i1 %252, label %253, label %262
@@ -659,17 +657,17 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
 253:                                              ; preds = %250
   %254 = trunc i32 %251 to i16
   %255 = shl nuw nsw i16 %254, 9, !spirv.Decorations !16
-  %.esimd117 = call <128 x float> @llvm.genx.rdregionf.v128f32.v512f32.i16(<512 x float> %.sroa.0551.1, i32 0, i32 128, i32 1, i16 %255, i32 0)
-  %.esimd118 = call <256 x half> @llvm.genx.rdregionf.v256f16.v2048f16.i16(<2048 x half> %.sroa.0578.2, i32 0, i32 256, i32 1, i16 %255, i32 0)
-  %.esimd119 = call <128 x half> @llvm.genx.rdregionf.v128f16.v256f16.i16(<256 x half> %.sroa.0581.2, i32 0, i32 128, i32 1, i16 0, i32 0)
+  %.esimd117 = call <128 x float> @llvm.genx.rdregionf.v128f32.v512f32.i16(<512 x float> %.sroa.0552.1, i32 0, i32 128, i32 1, i16 %255, i32 0)
+  %.esimd118 = call <256 x half> @llvm.genx.rdregionf.v256f16.v2048f16.i16(<2048 x half> %.sroa.0579.2, i32 0, i32 256, i32 1, i16 %255, i32 0)
+  %.esimd119 = call <128 x half> @llvm.genx.rdregionf.v128f16.v256f16.i16(<256 x half> %.sroa.0582.2, i32 0, i32 128, i32 1, i16 0, i32 0)
   %256 = bitcast <128 x half> %.esimd119 to <64 x i32>
   %257 = bitcast <256 x half> %.esimd118 to <128 x i32>
   %.esimd120 = call <128 x float> @llvm.genx.dpas2.v128f32.v128f32.v128i32.v64i32(<128 x float> %.esimd117, <128 x i32> %257, <64 x i32> %256, i32 10, i32 10, i32 8, i32 8, i32 1, i32 1)
-  %.esimd121 = call <512 x float> @llvm.genx.wrregionf.v512f32.v128f32.i16.v128i1(<512 x float> %.sroa.0551.1, <128 x float> %.esimd120, i32 0, i32 128, i32 1, i16 %255, i32 0, <128 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd121 = call <512 x float> @llvm.genx.wrregionf.v512f32.v128f32.i16.v128i1(<512 x float> %.sroa.0552.1, <128 x float> %.esimd120, i32 0, i32 128, i32 1, i16 %255, i32 0, <128 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
   %258 = or i16 %255, 2048
   %.esimd122 = call <128 x float> @llvm.genx.rdregionf.v128f32.v512f32.i16(<512 x float> %.esimd121, i32 0, i32 128, i32 1, i16 %255, i32 0)
-  %.esimd123 = call <256 x half> @llvm.genx.rdregionf.v256f16.v2048f16.i16(<2048 x half> %.sroa.0578.2, i32 0, i32 256, i32 1, i16 %258, i32 0)
-  %.esimd124 = call <128 x half> @llvm.genx.rdregionf.v128f16.v256f16.i16(<256 x half> %.sroa.0581.2, i32 0, i32 128, i32 1, i16 256, i32 0)
+  %.esimd123 = call <256 x half> @llvm.genx.rdregionf.v256f16.v2048f16.i16(<2048 x half> %.sroa.0579.2, i32 0, i32 256, i32 1, i16 %258, i32 0)
+  %.esimd124 = call <128 x half> @llvm.genx.rdregionf.v128f16.v256f16.i16(<256 x half> %.sroa.0582.2, i32 0, i32 128, i32 1, i16 256, i32 0)
   %259 = bitcast <128 x half> %.esimd124 to <64 x i32>
   %260 = bitcast <256 x half> %.esimd123 to <128 x i32>
   %.esimd125 = call <128 x float> @llvm.genx.dpas2.v128f32.v128f32.v128i32.v64i32(<128 x float> %.esimd122, <128 x i32> %260, <64 x i32> %259, i32 10, i32 10, i32 8, i32 8, i32 1, i32 1)
@@ -678,7 +676,7 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %250, !llvm.loop !32
 
 262:                                              ; preds = %250
-  %263 = bitcast <512 x float> %.sroa.0551.1 to <1024 x i16>
+  %263 = bitcast <512 x float> %.sroa.0552.1 to <1024 x i16>
   %.esimd127 = call <1 x i16> @llvm.genx.rdregioni.v1i16.v1024i16.i16(<1024 x i16> %263, i32 0, i32 1, i32 1, i16 0, i32 0)
   %264 = extractelement <1 x i16> %.esimd127, i32 0
   call void @llvm.genx.dummy.mov(i16 %264)
@@ -687,11 +685,13 @@ define spir_kernel void @_ZTSN3gpu5xetla9attention22paged_attention_kernelI25pag
   br label %153, !llvm.loop !33
 
 _ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EE13compute_scoreERNSB_11arguments_tE.exit: ; preds = %67
+  call void @llvm.genx.raw.send2.noresult.v16i1.v16i32(i8 0, i8 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 1, i8 3, i32 3, i32 33554436, <16 x i32> %.esimd)
+  call void @llvm.genx.nbarrier(i8 0, i8 0, i8 0)
   %266 = shl i32 %37, 11
   br label %267
 
 267:                                              ; preds = %270, %_ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EE13compute_scoreERNSB_11arguments_tE.exit
-  %.sroa.0287.0 = phi <512 x float> [ undef, %_ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EE13compute_scoreERNSB_11arguments_tE.exit ], [ %.esimd128, %270 ]
+  %.sroa.0288.0 = phi <512 x float> [ undef, %_ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EE13compute_scoreERNSB_11arguments_tE.exit ], [ %.esimd128, %270 ]
   %268 = phi i32 [ 0, %_ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EE13compute_scoreERNSB_11arguments_tE.exit ], [ %278, %270 ]
   %269 = icmp ult i32 %268, 4
   br i1 %269, label %270, label %279
@@ -704,16 +704,16 @@ _ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj12
   %275 = load <128 x float>, <128 x float> addrspace(3)* %274, align 16
   %276 = trunc i32 %268 to i16
   %277 = shl nuw nsw i16 %276, 9, !spirv.Decorations !16
-  %.esimd128 = call <512 x float> @llvm.genx.wrregionf.v512f32.v128f32.i16.v128i1(<512 x float> %.sroa.0287.0, <128 x float> %275, i32 0, i32 128, i32 1, i16 %277, i32 0, <128 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd128 = call <512 x float> @llvm.genx.wrregionf.v512f32.v128f32.i16.v128i1(<512 x float> %.sroa.0288.0, <128 x float> %275, i32 0, i32 128, i32 1, i16 %277, i32 0, <128 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
   %278 = add nuw nsw i32 %268, 1, !spirv.Decorations !16
   br label %267, !llvm.loop !34
 
 279:                                              ; preds = %267
-  %.esimd129 = call <16 x float> @llvm.genx.rdregionf.v16f32.v512f32.i16(<512 x float> %.sroa.0287.0, i32 0, i32 16, i32 1, i16 0, i32 0)
+  %.esimd129 = call <16 x float> @llvm.genx.rdregionf.v16f32.v512f32.i16(<512 x float> %.sroa.0288.0, i32 0, i32 16, i32 1, i16 0, i32 0)
   br label %280
 
 280:                                              ; preds = %283, %279
-  %.sroa.0310.0 = phi <16 x float> [ %.esimd129, %279 ], [ %.esimd131, %283 ]
+  %.sroa.0311.0 = phi <16 x float> [ %.esimd129, %279 ], [ %.esimd131, %283 ]
   %281 = phi i32 [ 1, %279 ], [ %287, %283 ]
   %282 = icmp ult i32 %281, 32
   br i1 %282, label %283, label %288
@@ -721,16 +721,16 @@ _ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj12
 283:                                              ; preds = %280
   %284 = trunc i32 %281 to i16
   %285 = shl nuw nsw i16 %284, 6, !spirv.Decorations !16
-  %.esimd130 = call <16 x float> @llvm.genx.rdregionf.v16f32.v512f32.i16(<512 x float> %.sroa.0287.0, i32 0, i32 16, i32 1, i16 %285, i32 0)
-  %286 = fcmp reassoc nsz arcp contract ogt <16 x float> %.sroa.0310.0, %.esimd130, !spirv.Decorations !35
-  %.esimd131 = call <16 x float> @llvm.genx.wrregionf.v16f32.v16f32.i16.v16i1(<16 x float> %.esimd130, <16 x float> %.sroa.0310.0, i32 0, i32 16, i32 1, i16 0, i32 16, <16 x i1> %286)
+  %.esimd130 = call <16 x float> @llvm.genx.rdregionf.v16f32.v512f32.i16(<512 x float> %.sroa.0288.0, i32 0, i32 16, i32 1, i16 %285, i32 0)
+  %286 = fcmp reassoc nsz arcp contract ogt <16 x float> %.sroa.0311.0, %.esimd130, !spirv.Decorations !35
+  %.esimd131 = call <16 x float> @llvm.genx.wrregionf.v16f32.v16f32.i16.v16i1(<16 x float> %.esimd130, <16 x float> %.sroa.0311.0, i32 0, i32 16, i32 1, i16 0, i32 16, <16 x i1> %286)
   %287 = add nuw nsw i32 %281, 1, !spirv.Decorations !16
   br label %280, !llvm.loop !37
 
 288:                                              ; preds = %280
-  %.esimd132 = call <16 x float> @llvm.genx.rdregionf.v16f32.v16f32.i16(<16 x float> %.sroa.0310.0, i32 16, i32 16, i32 1, i16 0, i32 16)
+  %.esimd132 = call <16 x float> @llvm.genx.rdregionf.v16f32.v16f32.i16(<16 x float> %.sroa.0311.0, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd133 = call <8 x float> @llvm.genx.rdregionf.v8f32.v16f32.i16(<16 x float> %.esimd132, i32 16, i32 8, i32 1, i16 0, i32 16)
-  %.esimd134 = call <16 x float> @llvm.genx.rdregionf.v16f32.v16f32.i16(<16 x float> %.sroa.0310.0, i32 16, i32 16, i32 1, i16 0, i32 16)
+  %.esimd134 = call <16 x float> @llvm.genx.rdregionf.v16f32.v16f32.i16(<16 x float> %.sroa.0311.0, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd135 = call <8 x float> @llvm.genx.rdregionf.v8f32.v16f32.i16(<16 x float> %.esimd134, i32 16, i32 8, i32 1, i16 32, i32 16)
   %289 = fcmp reassoc nsz arcp contract ogt <8 x float> %.esimd133, %.esimd135, !spirv.Decorations !35
   %.esimd136 = call <8 x float> @llvm.genx.wrregionf.v8f32.v8f32.i16.v8i1(<8 x float> %.esimd135, <8 x float> %.esimd133, i32 0, i32 8, i32 1, i16 0, i32 8, <8 x i1> %289)
@@ -753,14 +753,14 @@ _ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj12
   %292 = fcmp reassoc nsz arcp contract ogt <1 x float> %.esimd148, %.esimd150, !spirv.Decorations !35
   %.esimd151 = call <1 x float> @llvm.genx.wrregionf.v1f32.v1f32.i16.v1i1(<1 x float> %.esimd150, <1 x float> %.esimd148, i32 0, i32 1, i32 1, i16 0, i32 1, <1 x i1> %292)
   %293 = shufflevector <1 x float> %.esimd151, <1 x float> undef, <512 x i32> zeroinitializer
-  %294 = fsub reassoc nsz arcp contract <512 x float> %.sroa.0287.0, %293, !spirv.Decorations !35
+  %294 = fsub reassoc nsz arcp contract <512 x float> %.sroa.0288.0, %293, !spirv.Decorations !35
   %295 = fmul reassoc nsz arcp contract <512 x float> %294, <float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000, float 0x3FF7154760000000>, !spirv.Decorations !35
   %296 = call reassoc nsz arcp contract spir_func <512 x float> @_Z23__spirv_ocl_native_exp2Dv512_f(<512 x float> %295) #5, !noalias !38, !spirv.Decorations !35
   %.esimd152 = call <16 x float> @llvm.genx.rdregionf.v16f32.v512f32.i16(<512 x float> %296, i32 0, i32 16, i32 1, i16 0, i32 0)
   br label %297
 
 297:                                              ; preds = %300, %288
-  %.sroa.0348.0 = phi <16 x float> [ %.esimd152, %288 ], [ %303, %300 ]
+  %.sroa.0349.0 = phi <16 x float> [ %.esimd152, %288 ], [ %303, %300 ]
   %298 = phi i32 [ 1, %288 ], [ %304, %300 ]
   %299 = icmp ult i32 %298, 32
   br i1 %299, label %300, label %305
@@ -769,14 +769,14 @@ _ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj12
   %301 = trunc i32 %298 to i16
   %302 = shl nuw nsw i16 %301, 6, !spirv.Decorations !16
   %.esimd153 = call <16 x float> @llvm.genx.rdregionf.v16f32.v512f32.i16(<512 x float> %296, i32 0, i32 16, i32 1, i16 %302, i32 0)
-  %303 = fadd reassoc nsz arcp contract <16 x float> %.sroa.0348.0, %.esimd153, !spirv.Decorations !35
+  %303 = fadd reassoc nsz arcp contract <16 x float> %.sroa.0349.0, %.esimd153, !spirv.Decorations !35
   %304 = add nuw nsw i32 %298, 1, !spirv.Decorations !16
   br label %297, !llvm.loop !43
 
 305:                                              ; preds = %297
-  %.esimd154 = call <16 x float> @llvm.genx.rdregionf.v16f32.v16f32.i16(<16 x float> %.sroa.0348.0, i32 16, i32 16, i32 1, i16 0, i32 16)
+  %.esimd154 = call <16 x float> @llvm.genx.rdregionf.v16f32.v16f32.i16(<16 x float> %.sroa.0349.0, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd155 = call <8 x float> @llvm.genx.rdregionf.v8f32.v16f32.i16(<16 x float> %.esimd154, i32 16, i32 8, i32 1, i16 0, i32 16)
-  %.esimd156 = call <16 x float> @llvm.genx.rdregionf.v16f32.v16f32.i16(<16 x float> %.sroa.0348.0, i32 16, i32 16, i32 1, i16 0, i32 16)
+  %.esimd156 = call <16 x float> @llvm.genx.rdregionf.v16f32.v16f32.i16(<16 x float> %.sroa.0349.0, i32 16, i32 16, i32 1, i16 0, i32 16)
   %.esimd157 = call <8 x float> @llvm.genx.rdregionf.v8f32.v16f32.i16(<16 x float> %.esimd156, i32 16, i32 8, i32 1, i16 32, i32 16)
   %306 = fadd reassoc nsz arcp contract <8 x float> %.esimd155, %.esimd157, !spirv.Decorations !35
   %.esimd158 = call <8 x float> @llvm.genx.rdregionf.v8f32.v8f32.i16(<8 x float> %306, i32 8, i32 8, i32 1, i16 0, i32 8)
@@ -799,7 +799,7 @@ _ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj12
   br label %312
 
 312:                                              ; preds = %315, %305
-  %.sroa.0278.0 = phi <512 x half> [ undef, %305 ], [ %.esimd171, %315 ]
+  %.sroa.0279.0 = phi <512 x half> [ undef, %305 ], [ %.esimd171, %315 ]
   %313 = phi i32 [ 0, %305 ], [ %320, %315 ]
   %314 = icmp ult i32 %313, 512
   br i1 %314, label %315, label %321
@@ -810,7 +810,7 @@ _ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj12
   %.esimd170 = call <16 x float> @llvm.genx.rdregionf.v16f32.v512f32.i16(<512 x float> %311, i32 0, i32 16, i32 1, i16 %317, i32 0)
   %318 = fptrunc <16 x float> %.esimd170 to <16 x half>
   %319 = shl nuw nsw i16 %316, 1, !spirv.Decorations !16
-  %.esimd171 = call <512 x half> @llvm.genx.wrregionf.v512f16.v16f16.i16.v16i1(<512 x half> %.sroa.0278.0, <16 x half> %318, i32 0, i32 16, i32 1, i16 %319, i32 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd171 = call <512 x half> @llvm.genx.wrregionf.v512f16.v16f16.i16.v16i1(<512 x half> %.sroa.0279.0, <16 x half> %318, i32 0, i32 16, i32 1, i16 %319, i32 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
   %320 = add nuw nsw i32 %313, 16, !spirv.Decorations !16
   br label %312, !llvm.loop !44
 
@@ -829,7 +829,7 @@ _ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj12
   %329 = or i32 %323, %328
   %330 = trunc i32 %325 to i16
   %331 = shl nuw nsw i16 %330, 8, !spirv.Decorations !16
-  %.esimd172 = call <128 x half> @llvm.genx.rdregionf.v128f16.v512f16.i16(<512 x half> %.sroa.0278.0, i32 0, i32 128, i32 1, i16 %331, i32 0)
+  %.esimd172 = call <128 x half> @llvm.genx.rdregionf.v128f16.v512f16.i16(<512 x half> %.sroa.0279.0, i32 0, i32 128, i32 1, i16 %331, i32 0)
   %332 = zext i32 %329 to i64
   %333 = inttoptr i64 %332 to <128 x half> addrspace(3)*
   store <128 x half> %.esimd172, <128 x half> addrspace(3)* %333, align 16
@@ -882,7 +882,7 @@ _ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj12
   %367 = zext i32 %366 to i64
   %368 = trunc i32 %362 to i16
   %369 = shl nuw nsw i16 %368, 8, !spirv.Decorations !16
-  %.esimd173 = call <128 x half> @llvm.genx.rdregionf.v128f16.v512f16.i16(<512 x half> %.sroa.0278.0, i32 0, i32 128, i32 1, i16 %369, i32 0)
+  %.esimd173 = call <128 x half> @llvm.genx.rdregionf.v128f16.v512f16.i16(<512 x half> %.sroa.0279.0, i32 0, i32 128, i32 1, i16 %369, i32 0)
   %370 = getelementptr i8, i8 addrspace(4)* %360, i64 %367
   %371 = ptrtoint i8 addrspace(4)* %370 to i64
   %372 = insertelement <1 x i64> undef, i64 %371, i32 0
@@ -935,288 +935,292 @@ _ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj12
 406:                                              ; preds = %397, %396
   br label %407
 
-407:                                              ; preds = %544, %406
-  %.sroa.0858.0 = phi <16 x i32> [ undef, %406 ], [ %.esimd194, %544 ]
-  %.sroa.0398.0 = phi <64 x i32> [ undef, %406 ], [ %.sroa.0398.2, %544 ]
-  %.sroa.0410.0 = phi <128 x float> [ zeroinitializer, %406 ], [ %.sroa.0410.1, %544 ]
-  %.sroa.0414.0 = phi <1024 x half> [ undef, %406 ], [ %.sroa.0414.1, %544 ]
-  %.sroa.0417.0 = phi <512 x half> [ undef, %406 ], [ %.sroa.0417.1, %544 ]
-  %.sroa.0420.0 = phi <32 x i32> [ <i32 16384, i32 16392, i32 16400, i32 16408, i32 17408, i32 17416, i32 17424, i32 17432, i32 18432, i32 18440, i32 18448, i32 18456, i32 19456, i32 19464, i32 19472, i32 19480, i32 20480, i32 20488, i32 20496, i32 20504, i32 21504, i32 21512, i32 21520, i32 21528, i32 22528, i32 22536, i32 22544, i32 22552, i32 23552, i32 23560, i32 23568, i32 23576>, %406 ], [ %531, %544 ]
-  %408 = phi <256 x i16> [ undef, %406 ], [ %518, %544 ]
-  %409 = phi i32 [ 0, %406 ], [ %547, %544 ]
+407:                                              ; preds = %496, %406
+  %.sroa.0867.0 = phi <16 x i32> [ undef, %406 ], [ %.esimd180, %496 ]
+  %.sroa.0399.0 = phi <64 x i32> [ undef, %406 ], [ %.sroa.0399.2, %496 ]
+  %.sroa.0411.0 = phi <128 x float> [ zeroinitializer, %406 ], [ %.sroa.0411.1, %496 ]
+  %.sroa.0415.0 = phi <1024 x half> [ undef, %406 ], [ %.sroa.0415.1, %496 ]
+  %.sroa.0418.0 = phi <512 x half> [ undef, %406 ], [ %.sroa.0418.1, %496 ]
+  %.sroa.0421.0 = phi <32 x i32> [ <i32 16384, i32 16392, i32 16400, i32 16408, i32 17408, i32 17416, i32 17424, i32 17432, i32 18432, i32 18440, i32 18448, i32 18456, i32 19456, i32 19464, i32 19472, i32 19480, i32 20480, i32 20488, i32 20496, i32 20504, i32 21504, i32 21512, i32 21520, i32 21528, i32 22528, i32 22536, i32 22544, i32 22552, i32 23552, i32 23560, i32 23568, i32 23576>, %406 ], [ %483, %496 ]
+  %408 = phi <256 x i16> [ undef, %406 ], [ %470, %496 ]
+  %409 = phi i32 [ 0, %406 ], [ %499, %496 ]
   %410 = icmp ult i32 %409, 8
-  br i1 %410, label %461, label %411
+  br i1 %410, label %411, label %500
 
 411:                                              ; preds = %407
-  br label %412
+  %412 = or i32 %409, %60
+  %413 = icmp ult i32 %412, %63
+  br i1 %413, label %414, label %500
 
-412:                                              ; preds = %415, %411
-  %.sroa.0396.0 = phi <128 x half> [ undef, %411 ], [ %.esimd175, %415 ]
-  %413 = phi i32 [ 0, %411 ], [ %420, %415 ]
-  %414 = icmp ult i32 %413, 128
-  br i1 %414, label %415, label %421
+414:                                              ; preds = %411
+  %415 = zext i32 %412 to i64
+  %416 = getelementptr inbounds i32, i32 addrspace(4)* %55, i64 %415
+  %417 = load i32, i32 addrspace(4)* %416, align 4
+  %418 = shl i32 %37, 4
+  %419 = add i32 %57, %418
+  %420 = shl i32 %14, 8
+  %421 = mul i32 %417, %56
+  %422 = zext i32 %421 to i64
+  %423 = getelementptr inbounds %"class.sycl::_V1::detail::half_impl::half.0", %"class.sycl::_V1::detail::half_impl::half.0" addrspace(4)* %24, i64 %422
+  %424 = ptrtoint %"class.sycl::_V1::detail::half_impl::half.0" addrspace(4)* %423 to i64
+  %425 = insertelement <1 x i64> undef, i64 %424, i32 0
+  %426 = bitcast <16 x i32> %.sroa.0867.0 to <8 x i64>
+  %.esimd174 = call <8 x i64> @llvm.genx.wrregioni.v8i64.v1i64.i16.v1i1(<8 x i64> %426, <1 x i64> %425, i32 0, i32 1, i32 1, i16 0, i32 0, <1 x i1> <i1 true>)
+  %427 = bitcast <8 x i64> %.esimd174 to <16 x i32>
+  %428 = shl i32 %419, 1
+  %429 = or i32 %428, 31
+  %430 = insertelement <1 x i32> undef, i32 %429, i32 0
+  %.esimd175 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %427, <1 x i32> %430, i32 0, i32 1, i32 1, i16 8, i32 0, <1 x i1> <i1 true>)
+  %.esimd176 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd175, <1 x i32> <i32 63>, i32 0, i32 1, i32 1, i16 12, i32 0, <1 x i1> <i1 true>)
+  %431 = add i32 %420, -1
+  %432 = insertelement <1 x i32> undef, i32 %431, i32 0
+  %.esimd177 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd176, <1 x i32> %432, i32 0, i32 1, i32 1, i16 16, i32 0, <1 x i1> <i1 true>)
+  %433 = insertelement <1 x i32> undef, i32 %419, i32 0
+  %.esimd178 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd177, <1 x i32> %433, i32 0, i32 1, i32 1, i16 20, i32 0, <1 x i1> <i1 true>)
+  %.esimd179 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd178, <1 x i32> zeroinitializer, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
+  %.esimd180 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd179, <1 x i32> zeroinitializer, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
+  br label %434
 
-415:                                              ; preds = %412
-  %416 = trunc i32 %413 to i16
-  %417 = shl nuw nsw i16 %416, 2, !spirv.Decorations !16
-  %.esimd174 = call <16 x float> @llvm.genx.rdregionf.v16f32.v128f32.i16(<128 x float> %.sroa.0410.0, i32 0, i32 16, i32 1, i16 %417, i32 0)
-  %418 = fptrunc <16 x float> %.esimd174 to <16 x half>
-  %419 = shl nuw nsw i16 %416, 1, !spirv.Decorations !16
-  %.esimd175 = call <128 x half> @llvm.genx.wrregionf.v128f16.v16f16.i16.v16i1(<128 x half> %.sroa.0396.0, <16 x half> %418, i32 0, i32 16, i32 1, i16 %419, i32 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
-  %420 = add nuw nsw i32 %413, 16, !spirv.Decorations !16
-  br label %412, !llvm.loop !47
+434:                                              ; preds = %452, %414
+  %.sroa.0399.1 = phi <64 x i32> [ %.sroa.0399.0, %414 ], [ %.sroa.0399.3, %452 ]
+  %435 = phi i32 [ 0, %414 ], [ %453, %452 ]
+  %436 = phi i32 [ 0, %414 ], [ %454, %452 ]
+  %437 = icmp ult i32 %436, 4
+  br i1 %437, label %438, label %455
 
-421:                                              ; preds = %412
-  %422 = shl i32 %43, 7
-  %423 = shl i32 %37, 4
-  %424 = add i32 %422, %423
-  %425 = shl i32 %45, 8
-  %426 = mul i32 %13, %41
-  %427 = mul i32 %426, %45
-  %428 = shl i32 %427, 7
-  %429 = zext i32 %428 to i64
-  %430 = getelementptr inbounds %"class.sycl::_V1::detail::half_impl::half.0", %"class.sycl::_V1::detail::half_impl::half.0" addrspace(4)* %20, i64 %429
-  %431 = mul i32 %336, %45
-  %432 = shl i32 %431, 7
-  %433 = zext i32 %432 to i64
-  %434 = getelementptr inbounds %"class.sycl::_V1::detail::half_impl::half.0", %"class.sycl::_V1::detail::half_impl::half.0" addrspace(4)* %430, i64 %433
-  %435 = ptrtoint %"class.sycl::_V1::detail::half_impl::half.0" addrspace(4)* %434 to i64
-  %436 = insertelement <1 x i64> undef, i64 %435, i32 0
-  %.esimd176 = call <8 x i64> @llvm.genx.wrregioni.v8i64.v1i64.i16.v1i1(<8 x i64> undef, <1 x i64> %436, i32 0, i32 1, i32 1, i16 0, i32 0, <1 x i1> <i1 true>)
-  %437 = bitcast <8 x i64> %.esimd176 to <16 x i32>
-  %438 = shl i32 %424, 1
-  %439 = or i32 %438, 31
-  %440 = insertelement <1 x i32> undef, i32 %439, i32 0
-  %.esimd177 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %437, <1 x i32> %440, i32 0, i32 1, i32 1, i16 8, i32 0, <1 x i1> <i1 true>)
-  %.esimd178 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd177, <1 x i32> <i32 7>, i32 0, i32 1, i32 1, i16 12, i32 0, <1 x i1> <i1 true>)
-  %441 = add i32 %425, -1
-  %442 = insertelement <1 x i32> undef, i32 %441, i32 0
-  %.esimd179 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd178, <1 x i32> %442, i32 0, i32 1, i32 1, i16 16, i32 0, <1 x i1> <i1 true>)
-  %443 = insertelement <1 x i32> undef, i32 %424, i32 0
-  %.esimd180 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd179, <1 x i32> %443, i32 0, i32 1, i32 1, i16 20, i32 0, <1 x i1> <i1 true>)
-  %.esimd181 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd180, <1 x i32> zeroinitializer, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
-  %.esimd182 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd181, <1 x i32> zeroinitializer, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
-  br label %444
+438:                                              ; preds = %434
+  %439 = trunc i32 %436 to i16
+  %440 = shl nuw nsw i16 %439, 6, !spirv.Decorations !16
+  br label %441
 
-444:                                              ; preds = %459, %421
-  %.sroa.0389.0 = phi <16 x i32> [ undef, %421 ], [ %.sroa.0389.1, %459 ]
-  %445 = phi i32 [ 0, %421 ], [ %460, %459 ]
-  %446 = phi i1 [ true, %421 ], [ false, %459 ]
-  br i1 %446, label %447, label %548
+441:                                              ; preds = %444, %438
+  %.sroa.0399.3 = phi <64 x i32> [ %.sroa.0399.1, %438 ], [ %.esimd199, %444 ]
+  %442 = phi i1 [ true, %438 ], [ false, %444 ]
+  %443 = phi i32 [ 0, %438 ], [ %451, %444 ]
+  br i1 %442, label %444, label %452
 
-447:                                              ; preds = %444
-  br label %448
-
-448:                                              ; preds = %451, %447
-  %.sroa.0389.1 = phi <16 x i32> [ %.sroa.0389.0, %447 ], [ %.esimd187, %451 ]
-  %449 = phi i1 [ true, %447 ], [ false, %451 ]
-  %450 = phi i32 [ 0, %447 ], [ %458, %451 ]
-  br i1 %449, label %451, label %459
-
-451:                                              ; preds = %448
-  %.esimd183 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd182, <1 x i32> <i32 1807>, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
-  %.esimd184 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd183, i32 0, i32 1, i32 1, i16 20, i32 0)
-  %452 = extractelement <1 x i32> %.esimd184, i32 0
-  %453 = add nsw i32 %452, %450, !spirv.Decorations !14
-  %454 = insertelement <1 x i32> undef, i32 %453, i32 0
-  %.esimd185 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd183, <1 x i32> %454, i32 0, i32 1, i32 1, i16 20, i32 0, <1 x i1> <i1 true>)
-  %.esimd186 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd185, i32 0, i32 1, i32 1, i16 24, i32 0)
-  %455 = extractelement <1 x i32> %.esimd186, i32 0
-  %456 = add nsw i32 %455, %445, !spirv.Decorations !14
-  %457 = insertelement <1 x i32> undef, i32 %456, i32 0
-  %.esimd187 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd185, <1 x i32> %457, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
-  %458 = add i32 %450, 16
-  br label %448, !llvm.loop !48
-
-459:                                              ; preds = %448
-  %460 = add i32 %445, 8
-  br label %444, !llvm.loop !49
-
-461:                                              ; preds = %407
-  %462 = or i32 %409, %60
-  %463 = zext i32 %462 to i64
-  %464 = getelementptr inbounds i32, i32 addrspace(4)* %55, i64 %463
-  %465 = load i32, i32 addrspace(4)* %464, align 4
-  %466 = shl i32 %37, 4
-  %467 = add i32 %57, %466
-  %468 = shl i32 %14, 8
-  %469 = mul i32 %465, %56
-  %470 = zext i32 %469 to i64
-  %471 = getelementptr inbounds %"class.sycl::_V1::detail::half_impl::half.0", %"class.sycl::_V1::detail::half_impl::half.0" addrspace(4)* %24, i64 %470
-  %472 = ptrtoint %"class.sycl::_V1::detail::half_impl::half.0" addrspace(4)* %471 to i64
-  %473 = insertelement <1 x i64> undef, i64 %472, i32 0
-  %474 = bitcast <16 x i32> %.sroa.0858.0 to <8 x i64>
-  %.esimd188 = call <8 x i64> @llvm.genx.wrregioni.v8i64.v1i64.i16.v1i1(<8 x i64> %474, <1 x i64> %473, i32 0, i32 1, i32 1, i16 0, i32 0, <1 x i1> <i1 true>)
-  %475 = bitcast <8 x i64> %.esimd188 to <16 x i32>
-  %476 = shl i32 %467, 1
-  %477 = or i32 %476, 31
-  %478 = insertelement <1 x i32> undef, i32 %477, i32 0
-  %.esimd189 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %475, <1 x i32> %478, i32 0, i32 1, i32 1, i16 8, i32 0, <1 x i1> <i1 true>)
-  %.esimd190 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd189, <1 x i32> <i32 63>, i32 0, i32 1, i32 1, i16 12, i32 0, <1 x i1> <i1 true>)
-  %479 = add i32 %468, -1
-  %480 = insertelement <1 x i32> undef, i32 %479, i32 0
-  %.esimd191 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd190, <1 x i32> %480, i32 0, i32 1, i32 1, i16 16, i32 0, <1 x i1> <i1 true>)
-  %481 = insertelement <1 x i32> undef, i32 %467, i32 0
-  %.esimd192 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd191, <1 x i32> %481, i32 0, i32 1, i32 1, i16 20, i32 0, <1 x i1> <i1 true>)
-  %.esimd193 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd192, <1 x i32> zeroinitializer, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
-  %.esimd194 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd193, <1 x i32> zeroinitializer, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
-  br label %482
-
-482:                                              ; preds = %500, %461
-  %.sroa.0398.1 = phi <64 x i32> [ %.sroa.0398.0, %461 ], [ %.sroa.0398.3, %500 ]
-  %483 = phi i32 [ 0, %461 ], [ %501, %500 ]
-  %484 = phi i32 [ 0, %461 ], [ %502, %500 ]
-  %485 = icmp ult i32 %484, 4
-  br i1 %485, label %486, label %503
-
-486:                                              ; preds = %482
-  %487 = trunc i32 %484 to i16
-  %488 = shl nuw nsw i16 %487, 6, !spirv.Decorations !16
-  br label %489
-
-489:                                              ; preds = %492, %486
-  %.sroa.0398.3 = phi <64 x i32> [ %.sroa.0398.1, %486 ], [ %.esimd213, %492 ]
-  %490 = phi i1 [ true, %486 ], [ false, %492 ]
-  %491 = phi i32 [ 0, %486 ], [ %499, %492 ]
-  br i1 %490, label %492, label %500
-
-492:                                              ; preds = %489
-  %.esimd195 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.sroa.0398.3, <16 x i32> %.esimd194, i32 16, i32 16, i32 1, i16 %488, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
-  %.esimd196 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd195, i32 16, i32 16, i32 1, i16 %488, i32 16)
+444:                                              ; preds = %441
+  %.esimd181 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.sroa.0399.3, <16 x i32> %.esimd180, i32 16, i32 16, i32 1, i16 %440, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd182 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd181, i32 16, i32 16, i32 1, i16 %440, i32 16)
+  %.esimd183 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd182, i32 16, i32 16, i32 1, i16 0, i32 16)
+  %.esimd184 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd183, <1 x i32> <i32 3855>, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
+  %.esimd185 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.esimd181, <16 x i32> %.esimd184, i32 16, i32 16, i32 1, i16 %440, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd186 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd185, i32 16, i32 16, i32 1, i16 %440, i32 16)
+  %.esimd187 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd186, i32 16, i32 16, i32 1, i16 0, i32 16)
+  %.esimd188 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd187, i32 0, i32 1, i32 1, i16 20, i32 0)
+  %445 = extractelement <1 x i32> %.esimd188, i32 0
+  %446 = add nsw i32 %445, %443, !spirv.Decorations !14
+  %447 = insertelement <1 x i32> undef, i32 %446, i32 0
+  %.esimd189 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd185, i32 16, i32 16, i32 1, i16 %440, i32 16)
+  %.esimd190 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd189, i32 16, i32 16, i32 1, i16 0, i32 16)
+  %.esimd191 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd190, <1 x i32> %447, i32 0, i32 1, i32 1, i16 20, i32 0, <1 x i1> <i1 true>)
+  %.esimd192 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.esimd185, <16 x i32> %.esimd191, i32 16, i32 16, i32 1, i16 %440, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd193 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd192, i32 16, i32 16, i32 1, i16 %440, i32 16)
+  %.esimd194 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd193, i32 16, i32 16, i32 1, i16 0, i32 16)
+  %.esimd195 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd194, i32 0, i32 1, i32 1, i16 24, i32 0)
+  %448 = extractelement <1 x i32> %.esimd195, i32 0
+  %449 = add nsw i32 %448, %435, !spirv.Decorations !14
+  %450 = insertelement <1 x i32> undef, i32 %449, i32 0
+  %.esimd196 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd192, i32 16, i32 16, i32 1, i16 %440, i32 16)
   %.esimd197 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd196, i32 16, i32 16, i32 1, i16 0, i32 16)
-  %.esimd198 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd197, <1 x i32> <i32 3855>, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
-  %.esimd199 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.esimd195, <16 x i32> %.esimd198, i32 16, i32 16, i32 1, i16 %488, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
-  %.esimd200 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd199, i32 16, i32 16, i32 1, i16 %488, i32 16)
-  %.esimd201 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd200, i32 16, i32 16, i32 1, i16 0, i32 16)
-  %.esimd202 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd201, i32 0, i32 1, i32 1, i16 20, i32 0)
-  %493 = extractelement <1 x i32> %.esimd202, i32 0
-  %494 = add nsw i32 %493, %491, !spirv.Decorations !14
-  %495 = insertelement <1 x i32> undef, i32 %494, i32 0
-  %.esimd203 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd199, i32 16, i32 16, i32 1, i16 %488, i32 16)
-  %.esimd204 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd203, i32 16, i32 16, i32 1, i16 0, i32 16)
-  %.esimd205 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd204, <1 x i32> %495, i32 0, i32 1, i32 1, i16 20, i32 0, <1 x i1> <i1 true>)
-  %.esimd206 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.esimd199, <16 x i32> %.esimd205, i32 16, i32 16, i32 1, i16 %488, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
-  %.esimd207 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd206, i32 16, i32 16, i32 1, i16 %488, i32 16)
-  %.esimd208 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd207, i32 16, i32 16, i32 1, i16 0, i32 16)
-  %.esimd209 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd208, i32 0, i32 1, i32 1, i16 24, i32 0)
-  %496 = extractelement <1 x i32> %.esimd209, i32 0
-  %497 = add nsw i32 %496, %483, !spirv.Decorations !14
-  %498 = insertelement <1 x i32> undef, i32 %497, i32 0
-  %.esimd210 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd206, i32 16, i32 16, i32 1, i16 %488, i32 16)
-  %.esimd211 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd210, i32 16, i32 16, i32 1, i16 0, i32 16)
-  %.esimd212 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd211, <1 x i32> %498, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
-  %.esimd213 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.esimd206, <16 x i32> %.esimd212, i32 16, i32 16, i32 1, i16 %488, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
-  %499 = add i32 %491, 16
-  br label %489, !llvm.loop !50
+  %.esimd198 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd197, <1 x i32> %450, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
+  %.esimd199 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.esimd192, <16 x i32> %.esimd198, i32 16, i32 16, i32 1, i16 %440, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %451 = add i32 %443, 16
+  br label %441, !llvm.loop !47
 
-500:                                              ; preds = %489
-  %501 = add i32 %483, 16
-  %502 = add nuw nsw i32 %484, 1, !spirv.Decorations !16
-  br label %482, !llvm.loop !51
+452:                                              ; preds = %441
+  %453 = add i32 %435, 16
+  %454 = add nuw nsw i32 %436, 1, !spirv.Decorations !16
+  br label %434, !llvm.loop !48
 
-503:                                              ; preds = %482
-  br label %504
+455:                                              ; preds = %434
+  br label %456
 
-504:                                              ; preds = %507, %503
-  %.sroa.0417.1 = phi <512 x half> [ %.sroa.0417.0, %503 ], [ %.esimd215, %507 ]
-  %505 = phi i32 [ 0, %503 ], [ %515, %507 ]
-  %506 = icmp ult i32 %505, 4
-  br i1 %506, label %507, label %516
+456:                                              ; preds = %459, %455
+  %.sroa.0418.1 = phi <512 x half> [ %.sroa.0418.0, %455 ], [ %.esimd201, %459 ]
+  %457 = phi i32 [ 0, %455 ], [ %467, %459 ]
+  %458 = icmp ult i32 %457, 4
+  br i1 %458, label %459, label %468
 
-507:                                              ; preds = %504
-  %508 = shl nuw nsw i32 %505, 5, !spirv.Decorations !16
-  %509 = insertelement <32 x i32> undef, i32 %508, i32 0
-  %510 = shufflevector <32 x i32> %509, <32 x i32> undef, <32 x i32> zeroinitializer
-  %511 = add <32 x i32> %.sroa.0420.0, %510
-  %.esimd214 = call <32 x i64> @llvm.genx.lsc.load.merge.slm.v32i64.v32i1.v32i32(<32 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 0, i8 0, i8 0, i16 1, i32 0, i8 4, i8 1, i8 1, i8 0, <32 x i32> %511, i32 0, <32 x i64> undef)
-  %512 = bitcast <32 x i64> %.esimd214 to <128 x half>
-  %513 = trunc i32 %505 to i16
-  %514 = shl nuw nsw i16 %513, 8, !spirv.Decorations !16
-  %.esimd215 = call <512 x half> @llvm.genx.wrregionf.v512f16.v128f16.i16.v128i1(<512 x half> %.sroa.0417.1, <128 x half> %512, i32 0, i32 128, i32 1, i16 %514, i32 0, <128 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
-  %515 = add nuw nsw i32 %505, 1, !spirv.Decorations !16
-  br label %504, !llvm.loop !52
+459:                                              ; preds = %456
+  %460 = shl nuw nsw i32 %457, 5, !spirv.Decorations !16
+  %461 = insertelement <32 x i32> undef, i32 %460, i32 0
+  %462 = shufflevector <32 x i32> %461, <32 x i32> undef, <32 x i32> zeroinitializer
+  %463 = add <32 x i32> %.sroa.0421.0, %462
+  %.esimd200 = call <32 x i64> @llvm.genx.lsc.load.merge.slm.v32i64.v32i1.v32i32(<32 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 0, i8 0, i8 0, i16 1, i32 0, i8 4, i8 1, i8 1, i8 0, <32 x i32> %463, i32 0, <32 x i64> undef)
+  %464 = bitcast <32 x i64> %.esimd200 to <128 x half>
+  %465 = trunc i32 %457 to i16
+  %466 = shl nuw nsw i16 %465, 8, !spirv.Decorations !16
+  %.esimd201 = call <512 x half> @llvm.genx.wrregionf.v512f16.v128f16.i16.v128i1(<512 x half> %.sroa.0418.1, <128 x half> %464, i32 0, i32 128, i32 1, i16 %466, i32 0, <128 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %467 = add nuw nsw i32 %457, 1, !spirv.Decorations !16
+  br label %456, !llvm.loop !49
 
-516:                                              ; preds = %504
-  br label %517
+468:                                              ; preds = %456
+  br label %469
 
-517:                                              ; preds = %521, %516
-  %.sroa.0398.2 = phi <64 x i32> [ %.sroa.0398.1, %516 ], [ %.esimd219, %521 ]
-  %.sroa.0414.1 = phi <1024 x half> [ %.sroa.0414.0, %516 ], [ %.esimd223, %521 ]
-  %518 = phi <256 x i16> [ %408, %516 ], [ %.esimd222, %521 ]
-  %519 = phi i32 [ 0, %516 ], [ %529, %521 ]
-  %520 = icmp ult i32 %519, 4
-  br i1 %520, label %521, label %530
+469:                                              ; preds = %473, %468
+  %.sroa.0399.2 = phi <64 x i32> [ %.sroa.0399.1, %468 ], [ %.esimd205, %473 ]
+  %.sroa.0415.1 = phi <1024 x half> [ %.sroa.0415.0, %468 ], [ %.esimd209, %473 ]
+  %470 = phi <256 x i16> [ %408, %468 ], [ %.esimd208, %473 ]
+  %471 = phi i32 [ 0, %468 ], [ %481, %473 ]
+  %472 = icmp ult i32 %471, 4
+  br i1 %472, label %473, label %482
 
-521:                                              ; preds = %517
-  %522 = trunc i32 %519 to i16
-  %523 = shl nuw nsw i16 %522, 6, !spirv.Decorations !16
-  %.esimd216 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.sroa.0398.2, i32 16, i32 16, i32 1, i16 %523, i32 16)
-  %.esimd217 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd216, i32 16, i32 16, i32 1, i16 0, i32 16)
-  %.esimd218 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd217, <1 x i32> <i32 3855>, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
-  %.esimd219 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.sroa.0398.2, <16 x i32> %.esimd218, i32 16, i32 16, i32 1, i16 %523, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
-  %.esimd220 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd219, i32 16, i32 16, i32 1, i16 %523, i32 16)
-  %.esimd221 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd220, i32 16, i32 16, i32 1, i16 0, i32 16)
-  %524 = shl nuw nsw i16 %522, 9, !spirv.Decorations !16
-  %.esimd222 = call <256 x i16> @llvm.genx.raw.send2.v256i16.v16i1.v16i32(i8 0, i8 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 1, i8 8, i8 15, i32 0, i32 42467971, <16 x i32> %.esimd221, <256 x i16> %518)
-  %525 = bitcast <256 x i16> %.esimd222 to <256 x half>
-  %.esimd223 = call <1024 x half> @llvm.genx.wrregionf.v1024f16.v256f16.i16.v256i1(<1024 x half> %.sroa.0414.1, <256 x half> %525, i32 0, i32 256, i32 1, i16 %524, i32 0, <256 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
-  %.esimd224 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd221, i32 0, i32 1, i32 1, i16 24, i32 0)
-  %526 = extractelement <1 x i32> %.esimd224, i32 0
-  %527 = add nsw i32 %526, 16, !spirv.Decorations !14
-  %528 = insertelement <1 x i32> undef, i32 %527, i32 0
-  %.esimd225 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd221, <1 x i32> %528, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
-  %529 = add nuw nsw i32 %519, 1, !spirv.Decorations !16
-  br label %517, !llvm.loop !53
+473:                                              ; preds = %469
+  %474 = trunc i32 %471 to i16
+  %475 = shl nuw nsw i16 %474, 6, !spirv.Decorations !16
+  %.esimd202 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.sroa.0399.2, i32 16, i32 16, i32 1, i16 %475, i32 16)
+  %.esimd203 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd202, i32 16, i32 16, i32 1, i16 0, i32 16)
+  %.esimd204 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd203, <1 x i32> <i32 3855>, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
+  %.esimd205 = call <64 x i32> @llvm.genx.wrregioni.v64i32.v16i32.i16.v16i1(<64 x i32> %.sroa.0399.2, <16 x i32> %.esimd204, i32 16, i32 16, i32 1, i16 %475, i32 16, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd206 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v64i32.i16(<64 x i32> %.esimd205, i32 16, i32 16, i32 1, i16 %475, i32 16)
+  %.esimd207 = call <16 x i32> @llvm.genx.rdregioni.v16i32.v16i32.i16(<16 x i32> %.esimd206, i32 16, i32 16, i32 1, i16 0, i32 16)
+  %476 = shl nuw nsw i16 %474, 9, !spirv.Decorations !16
+  %.esimd208 = call <256 x i16> @llvm.genx.raw.send2.v256i16.v16i1.v16i32(i8 0, i8 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 1, i8 8, i8 15, i32 0, i32 42467971, <16 x i32> %.esimd207, <256 x i16> %470)
+  %477 = bitcast <256 x i16> %.esimd208 to <256 x half>
+  %.esimd209 = call <1024 x half> @llvm.genx.wrregionf.v1024f16.v256f16.i16.v256i1(<1024 x half> %.sroa.0415.1, <256 x half> %477, i32 0, i32 256, i32 1, i16 %476, i32 0, <256 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %.esimd210 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd207, i32 0, i32 1, i32 1, i16 24, i32 0)
+  %478 = extractelement <1 x i32> %.esimd210, i32 0
+  %479 = add nsw i32 %478, 16, !spirv.Decorations !14
+  %480 = insertelement <1 x i32> undef, i32 %479, i32 0
+  %.esimd211 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd207, <1 x i32> %480, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
+  %481 = add nuw nsw i32 %471, 1, !spirv.Decorations !16
+  br label %469, !llvm.loop !50
 
-530:                                              ; preds = %517
-  %531 = add <32 x i32> %.sroa.0420.0, <i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128>
+482:                                              ; preds = %469
+  %483 = add <32 x i32> %.sroa.0421.0, <i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128, i32 128>
   call void asm sideeffect "fence_sw", ""()
-  %.esimd226 = call <256 x half> @llvm.genx.rdregionf.v256f16.v1024f16.i16(<1024 x half> %.sroa.0414.1, i32 0, i32 256, i32 1, i16 0, i32 0)
-  %.esimd227 = call <128 x half> @llvm.genx.rdregionf.v128f16.v512f16.i16(<512 x half> %.sroa.0417.1, i32 0, i32 128, i32 1, i16 0, i32 0)
-  %532 = bitcast <128 x half> %.esimd227 to <64 x i32>
-  %533 = bitcast <256 x half> %.esimd226 to <128 x i32>
-  %.esimd228 = call <128 x float> @llvm.genx.dpas2.v128f32.v128f32.v128i32.v64i32(<128 x float> %.sroa.0410.0, <128 x i32> %533, <64 x i32> %532, i32 10, i32 10, i32 8, i32 8, i32 1, i32 1)
-  br label %534
+  %.esimd212 = call <256 x half> @llvm.genx.rdregionf.v256f16.v1024f16.i16(<1024 x half> %.sroa.0415.1, i32 0, i32 256, i32 1, i16 0, i32 0)
+  %.esimd213 = call <128 x half> @llvm.genx.rdregionf.v128f16.v512f16.i16(<512 x half> %.sroa.0418.1, i32 0, i32 128, i32 1, i16 0, i32 0)
+  %484 = bitcast <128 x half> %.esimd213 to <64 x i32>
+  %485 = bitcast <256 x half> %.esimd212 to <128 x i32>
+  %.esimd214 = call <128 x float> @llvm.genx.dpas2.v128f32.v128f32.v128i32.v64i32(<128 x float> %.sroa.0411.0, <128 x i32> %485, <64 x i32> %484, i32 10, i32 10, i32 8, i32 8, i32 1, i32 1)
+  br label %486
 
-534:                                              ; preds = %537, %530
-  %.sroa.0410.1 = phi <128 x float> [ %.esimd228, %530 ], [ %.esimd231, %537 ]
-  %535 = phi i32 [ 1, %530 ], [ %543, %537 ]
-  %536 = icmp ult i32 %535, 4
-  br i1 %536, label %537, label %544
+486:                                              ; preds = %489, %482
+  %.sroa.0411.1 = phi <128 x float> [ %.esimd214, %482 ], [ %.esimd217, %489 ]
+  %487 = phi i32 [ 1, %482 ], [ %495, %489 ]
+  %488 = icmp ult i32 %487, 4
+  br i1 %488, label %489, label %496
 
-537:                                              ; preds = %534
-  %538 = trunc i32 %535 to i16
-  %539 = shl nuw nsw i16 %538, 8, !spirv.Decorations !16
-  %540 = shl nuw nsw i16 %538, 9, !spirv.Decorations !16
-  %.esimd229 = call <256 x half> @llvm.genx.rdregionf.v256f16.v1024f16.i16(<1024 x half> %.sroa.0414.1, i32 0, i32 256, i32 1, i16 %540, i32 0)
-  %.esimd230 = call <128 x half> @llvm.genx.rdregionf.v128f16.v512f16.i16(<512 x half> %.sroa.0417.1, i32 0, i32 128, i32 1, i16 %539, i32 0)
-  %541 = bitcast <128 x half> %.esimd230 to <64 x i32>
-  %542 = bitcast <256 x half> %.esimd229 to <128 x i32>
-  %.esimd231 = call <128 x float> @llvm.genx.dpas2.v128f32.v128f32.v128i32.v64i32(<128 x float> %.sroa.0410.1, <128 x i32> %542, <64 x i32> %541, i32 10, i32 10, i32 8, i32 8, i32 1, i32 1)
-  %543 = add nuw nsw i32 %535, 1, !spirv.Decorations !16
-  br label %534, !llvm.loop !54
+489:                                              ; preds = %486
+  %490 = trunc i32 %487 to i16
+  %491 = shl nuw nsw i16 %490, 8, !spirv.Decorations !16
+  %492 = shl nuw nsw i16 %490, 9, !spirv.Decorations !16
+  %.esimd215 = call <256 x half> @llvm.genx.rdregionf.v256f16.v1024f16.i16(<1024 x half> %.sroa.0415.1, i32 0, i32 256, i32 1, i16 %492, i32 0)
+  %.esimd216 = call <128 x half> @llvm.genx.rdregionf.v128f16.v512f16.i16(<512 x half> %.sroa.0418.1, i32 0, i32 128, i32 1, i16 %491, i32 0)
+  %493 = bitcast <128 x half> %.esimd216 to <64 x i32>
+  %494 = bitcast <256 x half> %.esimd215 to <128 x i32>
+  %.esimd217 = call <128 x float> @llvm.genx.dpas2.v128f32.v128f32.v128i32.v64i32(<128 x float> %.sroa.0411.1, <128 x i32> %494, <64 x i32> %493, i32 10, i32 10, i32 8, i32 8, i32 1, i32 1)
+  %495 = add nuw nsw i32 %487, 1, !spirv.Decorations !16
+  br label %486, !llvm.loop !51
 
-544:                                              ; preds = %534
-  %545 = bitcast <128 x float> %.sroa.0410.1 to <256 x i16>
-  %.esimd232 = call <1 x i16> @llvm.genx.rdregioni.v1i16.v256i16.i16(<256 x i16> %545, i32 0, i32 1, i32 1, i16 0, i32 0)
-  %546 = extractelement <1 x i16> %.esimd232, i32 0
-  call void @llvm.genx.dummy.mov(i16 %546)
+496:                                              ; preds = %486
+  %497 = bitcast <128 x float> %.sroa.0411.1 to <256 x i16>
+  %.esimd218 = call <1 x i16> @llvm.genx.rdregioni.v1i16.v256i16.i16(<256 x i16> %497, i32 0, i32 1, i32 1, i16 0, i32 0)
+  %498 = extractelement <1 x i16> %.esimd218, i32 0
+  call void @llvm.genx.dummy.mov(i16 %498)
   call void asm sideeffect "fence_sw", ""()
-  %547 = add nuw nsw i32 %409, 1, !spirv.Decorations !16
-  br label %407, !llvm.loop !55
+  %499 = add nuw nsw i32 %409, 1, !spirv.Decorations !16
+  br label %407, !llvm.loop !52
 
-548:                                              ; preds = %444
-  %.esimd233 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.sroa.0389.0, <1 x i32> <i32 1807>, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
-  %549 = bitcast <128 x half> %.sroa.0396.0 to <128 x i16>
-  call void @llvm.genx.raw.sends2.noresult.v16i1.v16i32.v128i16(i8 0, i8 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 1, i8 4, i8 15, i32 0, i32 34472455, <16 x i32> %.esimd233, <128 x i16> %549)
+500:                                              ; preds = %411, %407
+  br label %501
+
+501:                                              ; preds = %504, %500
+  %.sroa.0397.0 = phi <128 x half> [ undef, %500 ], [ %.esimd220, %504 ]
+  %502 = phi i32 [ 0, %500 ], [ %509, %504 ]
+  %503 = icmp ult i32 %502, 128
+  br i1 %503, label %504, label %510
+
+504:                                              ; preds = %501
+  %505 = trunc i32 %502 to i16
+  %506 = shl nuw nsw i16 %505, 2, !spirv.Decorations !16
+  %.esimd219 = call <16 x float> @llvm.genx.rdregionf.v16f32.v128f32.i16(<128 x float> %.sroa.0411.0, i32 0, i32 16, i32 1, i16 %506, i32 0)
+  %507 = fptrunc <16 x float> %.esimd219 to <16 x half>
+  %508 = shl nuw nsw i16 %505, 1, !spirv.Decorations !16
+  %.esimd220 = call <128 x half> @llvm.genx.wrregionf.v128f16.v16f16.i16.v16i1(<128 x half> %.sroa.0397.0, <16 x half> %507, i32 0, i32 16, i32 1, i16 %508, i32 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>)
+  %509 = add nuw nsw i32 %502, 16, !spirv.Decorations !16
+  br label %501, !llvm.loop !53
+
+510:                                              ; preds = %501
+  %511 = shl i32 %43, 7
+  %512 = shl i32 %37, 4
+  %513 = add i32 %511, %512
+  %514 = shl i32 %45, 8
+  %515 = mul i32 %13, %41
+  %516 = mul i32 %515, %45
+  %517 = shl i32 %516, 7
+  %518 = zext i32 %517 to i64
+  %519 = getelementptr inbounds %"class.sycl::_V1::detail::half_impl::half.0", %"class.sycl::_V1::detail::half_impl::half.0" addrspace(4)* %20, i64 %518
+  %520 = mul i32 %336, %45
+  %521 = shl i32 %520, 7
+  %522 = zext i32 %521 to i64
+  %523 = getelementptr inbounds %"class.sycl::_V1::detail::half_impl::half.0", %"class.sycl::_V1::detail::half_impl::half.0" addrspace(4)* %519, i64 %522
+  %524 = ptrtoint %"class.sycl::_V1::detail::half_impl::half.0" addrspace(4)* %523 to i64
+  %525 = insertelement <1 x i64> undef, i64 %524, i32 0
+  %.esimd221 = call <8 x i64> @llvm.genx.wrregioni.v8i64.v1i64.i16.v1i1(<8 x i64> undef, <1 x i64> %525, i32 0, i32 1, i32 1, i16 0, i32 0, <1 x i1> <i1 true>)
+  %526 = bitcast <8 x i64> %.esimd221 to <16 x i32>
+  %527 = shl i32 %513, 1
+  %528 = or i32 %527, 31
+  %529 = insertelement <1 x i32> undef, i32 %528, i32 0
+  %.esimd222 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %526, <1 x i32> %529, i32 0, i32 1, i32 1, i16 8, i32 0, <1 x i1> <i1 true>)
+  %.esimd223 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd222, <1 x i32> <i32 7>, i32 0, i32 1, i32 1, i16 12, i32 0, <1 x i1> <i1 true>)
+  %530 = add i32 %514, -1
+  %531 = insertelement <1 x i32> undef, i32 %530, i32 0
+  %.esimd224 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd223, <1 x i32> %531, i32 0, i32 1, i32 1, i16 16, i32 0, <1 x i1> <i1 true>)
+  %532 = insertelement <1 x i32> undef, i32 %513, i32 0
+  %.esimd225 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd224, <1 x i32> %532, i32 0, i32 1, i32 1, i16 20, i32 0, <1 x i1> <i1 true>)
+  %.esimd226 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd225, <1 x i32> zeroinitializer, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
+  %.esimd227 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd226, <1 x i32> zeroinitializer, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
+  br label %533
+
+533:                                              ; preds = %548, %510
+  %.sroa.0390.0 = phi <16 x i32> [ undef, %510 ], [ %.sroa.0390.1, %548 ]
+  %534 = phi i32 [ 0, %510 ], [ %549, %548 ]
+  %535 = phi i1 [ true, %510 ], [ false, %548 ]
+  br i1 %535, label %536, label %550
+
+536:                                              ; preds = %533
+  br label %537
+
+537:                                              ; preds = %540, %536
+  %.sroa.0390.1 = phi <16 x i32> [ %.sroa.0390.0, %536 ], [ %.esimd232, %540 ]
+  %538 = phi i1 [ true, %536 ], [ false, %540 ]
+  %539 = phi i32 [ 0, %536 ], [ %547, %540 ]
+  br i1 %538, label %540, label %548
+
+540:                                              ; preds = %537
+  %.esimd228 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd227, <1 x i32> <i32 1807>, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
+  %.esimd229 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd228, i32 0, i32 1, i32 1, i16 20, i32 0)
+  %541 = extractelement <1 x i32> %.esimd229, i32 0
+  %542 = add nsw i32 %541, %539, !spirv.Decorations !14
+  %543 = insertelement <1 x i32> undef, i32 %542, i32 0
+  %.esimd230 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd228, <1 x i32> %543, i32 0, i32 1, i32 1, i16 20, i32 0, <1 x i1> <i1 true>)
+  %.esimd231 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd230, i32 0, i32 1, i32 1, i16 24, i32 0)
+  %544 = extractelement <1 x i32> %.esimd231, i32 0
+  %545 = add nsw i32 %544, %534, !spirv.Decorations !14
+  %546 = insertelement <1 x i32> undef, i32 %545, i32 0
+  %.esimd232 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd230, <1 x i32> %546, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
+  %547 = add i32 %539, 16
+  br label %537, !llvm.loop !54
+
+548:                                              ; preds = %537
+  %549 = add i32 %534, 8
+  br label %533, !llvm.loop !55
+
+550:                                              ; preds = %533
+  %.esimd233 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.sroa.0390.0, <1 x i32> <i32 1807>, i32 0, i32 1, i32 1, i16 28, i32 0, <1 x i1> <i1 true>)
+  %551 = bitcast <128 x half> %.sroa.0397.0 to <128 x i16>
+  call void @llvm.genx.raw.sends2.noresult.v16i1.v16i32.v128i16(i8 0, i8 0, <16 x i1> <i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true, i1 true>, i8 1, i8 4, i8 15, i32 0, i32 34472455, <16 x i32> %.esimd233, <128 x i16> %551)
   %.esimd234 = call <1 x i32> @llvm.genx.rdregioni.v1i32.v16i32.i16(<16 x i32> %.esimd233, i32 0, i32 1, i32 1, i16 24, i32 0)
-  %550 = extractelement <1 x i32> %.esimd234, i32 0
-  %551 = add nsw i32 %550, 8, !spirv.Decorations !14
-  %552 = insertelement <1 x i32> undef, i32 %551, i32 0
-  %.esimd235 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd233, <1 x i32> %552, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
+  %552 = extractelement <1 x i32> %.esimd234, i32 0
+  %553 = add nsw i32 %552, 8, !spirv.Decorations !14
+  %554 = insertelement <1 x i32> undef, i32 %553, i32 0
+  %.esimd235 = call <16 x i32> @llvm.genx.wrregioni.v16i32.v1i32.i16.v1i1(<16 x i32> %.esimd233, <1 x i32> %554, i32 0, i32 1, i32 1, i16 24, i32 0, <1 x i1> <i1 true>)
   br label %_ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EEclERNS6_7nd_itemILi3EEERNSB_11arguments_tE.exit
 
-_ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EEclERNS6_7nd_itemILi3EEERNSB_11arguments_tE.exit: ; preds = %548, %50
+_ZN3gpu5xetla9attention22paged_attention_kernelI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EEclERNS6_7nd_itemILi3EEERNSB_11arguments_tE.exit: ; preds = %550, %50
   ret void
 }
 

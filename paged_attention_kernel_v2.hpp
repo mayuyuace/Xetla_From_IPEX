@@ -466,45 +466,6 @@ class paged_attention_kernel {
 
   context_t ctx;
 
-  // -------------------- // preload_query // -------------------- //
-
-  // Pre-load query from global memory to shared local memory.
-  inline void preload_query(arguments_t& args) {
-    using tile_desc_t = subgroup::tile_desc_t<head_size_per_sg, 1, 16, 1>;
-    using tile_t = subgroup::tile_t<scalar_t, tile_desc_t>;
-
-    using global_ld_payload_t = subgroup::mem_payload_t<
-        mem_desc_t<scalar_t, mem_layout::row_major, mem_space::global>,
-        tile_desc_t,
-        msg_type::block_1d,
-        arch_tag>;
-    using local_st_payload_t = subgroup::mem_payload_t<
-        mem_desc_t<scalar_t, mem_layout::row_major, mem_space::local>,
-        tile_desc_t,
-        msg_type::block_1d,
-        arch_tag>;
-
-    uint32_t boundary_x = max_head_size;
-    uint32_t boundary_y = args.num_seqs * args.num_heads;
-    uint32_t pitch = max_head_size;
-    int32_t start_x = ctx.sg_id * head_size_per_sg;
-    int32_t start_y = ctx.seq_id * args.num_heads + ctx.head_id;
-
-    if (start_x < max_head_size) {
-      global_ld_payload_t ld_payload(
-          args.query, boundary_x, boundary_y, pitch, start_x, start_y);
-      local_st_payload_t st_payload(
-          slm_offset_query, max_head_size, 1, max_head_size, start_x, 0);
-
-      tile_t mat_query;
-      subgroup::tile_load(mat_query, ld_payload);
-      subgroup::tile_store(mat_query, st_payload);
-    }
-    xetla_fence<memory_kind::shared_local>();
-    if constexpr (wg_size > 1)
-      ctx.nbarrier.arrive_wait();
-  }
-
   // -------------------- // compute_score // -------------------- //
 
   static constexpr uint32_t mma_sg_tile_size = 16;
@@ -604,7 +565,6 @@ class paged_attention_kernel {
       
       query_payload_t query_payload(
           cur_query, boundary_query_x, boundary_query_y, max_head_size, 0, 0);
-      
 
       uint32_t boundary_score_y = query_group_size;
       uint32_t start_score_x = ctx.sg_id * block_size;
@@ -643,8 +603,6 @@ class paged_attention_kernel {
       }
       subgroup::tile_store(score_sub, score_payload);
       xetla_fence<memory_kind::shared_local>();
-      if constexpr (wg_size > 1)
-        ctx.nbarrier.arrive_wait();
 
       // score_sub.reg *= args.sm_scale;
       // if (args.softcap > 0.0) {
@@ -672,6 +630,8 @@ class paged_attention_kernel {
       // mat_score.reg.xetla_select<query_group_size * block_size, 1>(
       //     row_i * query_group_size * block_size) = score_sub.reg;
     }
+    if constexpr (wg_size > 1)
+      ctx.nbarrier.arrive_wait();
   }
 
   // -------------------- // softmax // -------------------- //
@@ -855,8 +815,10 @@ class paged_attention_kernel {
 #pragma unroll
     for (uint32_t i = 0; i < value_blocks_per_sg; ++i) {
       uint32_t cur_bid = i + ctx.start_block_id; 
-      uint32_t block_id = ctx.block_table[cur_bid];
+      if (cur_bid >= ctx.end_block_id) break;
 
+      uint32_t block_id = ctx.block_table[cur_bid];
+      
       constexpr uint32_t boundary_v_y = block_size;
       uint32_t start_v_x = ctx.kv_head_id * max_head_size + ctx.sg_id * head_size_per_sg;
       uint32_t boundary_v_x = start_v_x + head_size_per_sg;
@@ -937,7 +899,6 @@ class paged_attention_kernel {
       arguments_t& args) {
     // initialization
 
-    /* sycl::ext::oneapi::experimental::printf("sg_id : %d\n", item.get_local_linear_id()); */
     ctx.init(item, args);
     if (use_partition && ctx.start_block_id >= ctx.end_block_id) {
       return;
