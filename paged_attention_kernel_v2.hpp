@@ -290,8 +290,8 @@ class paged_attention_kernel {
     accum_t* exp_sums; // [num_seqs, num_heads, max_num_partitions]
     scalar_t* out; // [num_seqs, num_heads, max_num_partitions, head_size]
     scalar_t* query; // [num_seqs, num_heads, head_size]
-    scalar_t* key_cache; // [num_blocks, block_size num_kv_heads, head_size]
-    scalar_t* value_cache; // [num_blocks, block_size num_kv_heads, head_size]
+    scalar_t* key_cache; // [num_blocks, block_size, num_kv_heads, head_size]
+    scalar_t* value_cache; // [num_blocks, block_size, num_kv_heads, head_size]
     float* alibi_slopes; // [num_heads] - alibi_slopes
 
     // temporary output
@@ -402,6 +402,8 @@ class paged_attention_kernel {
   static constexpr bool has_2d_ld_st =
       (arch_tag == gpu_arch::XeHpc) ? true : false;
 
+  static constexpr int loop_count = DIVIDE_ROUND_UP(max_head_size, head_size_stride); 
+
   // -------------------- // Context // -------------------- //
 
   struct context_t {
@@ -420,7 +422,6 @@ class paged_attention_kernel {
     int kv_head_stride;
     int start_block_id;
     int end_block_id;
-    int loop_count;
 
     float alibi_slopes;
 
@@ -444,8 +445,8 @@ class paged_attention_kernel {
       num_blocks_per_sg = 0;
 
       head_id = kv_head_id * query_group_size;
-      kv_block_stride = args.num_kv_heads * args.head_size * block_size;
-      kv_head_stride = args.head_size * kv_head_id;
+      kv_block_stride = args.num_kv_heads * max_head_size * block_size;
+      kv_head_stride = max_head_size * kv_head_id;
 
       const int max_num_blocks = DIVIDE_ROUND_UP(context_len, block_size);
       const int num_blocks_per_wg =
@@ -454,8 +455,6 @@ class paged_attention_kernel {
       start_block_id = partition_id * num_blocks_per_wg;
       end_block_id =
           std::min(max_num_blocks, start_block_id + num_blocks_per_wg);
-
-      loop_count = DIVIDE_ROUND_UP(args.head_size, head_size_stride);
 
       nbarrier.init_nbarrier(0, nbarrier_role::producer_consumer);
     }
@@ -485,13 +484,13 @@ class paged_attention_kernel {
         msg_type::block_1d,
         arch_tag>;
 
-    uint32_t boundary_x = args.head_size;
+    uint32_t boundary_x = max_head_size;
     uint32_t boundary_y = args.num_seqs * args.num_heads;
-    uint32_t pitch = args.head_size;
+    uint32_t pitch = max_head_size;
     int32_t start_x = ctx.sg_id * head_size_per_sg;
     int32_t start_y = ctx.seq_id * args.num_heads + ctx.head_id;
 
-    if (start_x < args.head_size) {
+    if (start_x < max_head_size) {
       global_ld_payload_t ld_payload(
           args.query, boundary_x, boundary_y, pitch, start_x, start_y);
       local_st_payload_t st_payload(
@@ -590,8 +589,8 @@ class paged_attention_kernel {
       int32_t start_y = block_id * block_size;
       uint32_t boundary_y = start_y + block_size;
       int32_t start_x = ctx.kv_head_stride;
-      uint32_t boundary_x = start_x + args.head_size;
-      uint32_t pitch = args.head_size * args.num_kv_heads;
+      uint32_t boundary_x = start_x + max_head_size;
+      uint32_t pitch = max_head_size * args.num_kv_heads;
       auto* cur_key_cache = args.key_cache;
       key_payload_t key_payload(
           cur_key_cache, boundary_x, boundary_y, pitch, start_x, start_y);
@@ -599,9 +598,9 @@ class paged_attention_kernel {
       //     cur_key_cache, boundary_x, boundary_y, pitch, start_x, start_y);
 
       uint32_t boundary_query_y = query_group_size;
-      uint32_t boundary_query_x = args.head_size;
-      auto* cur_query = args.query + ctx.seq_id * args.num_heads * args.head_size + 
-          ctx.kv_head_id * query_group_size * args.head_size;
+      uint32_t boundary_query_x = max_head_size;
+      auto* cur_query = args.query + ctx.seq_id * args.num_heads * max_head_size + 
+          ctx.kv_head_id * query_group_size * max_head_size;
       
       query_payload_t query_payload(
           cur_query, boundary_query_x, boundary_query_y, max_head_size, 0, 0);
@@ -630,7 +629,8 @@ class paged_attention_kernel {
       
       score_acc_tile_t score_sub(0.0f);
 
-      for (int i = 0; i < ctx.loop_count; i++) {
+#pragma unroll
+      for (int i = 0; i < loop_count; i++) {
         subgroup::tile_load(mat_query, query_payload);
         subgroup::tile_load(mat_key, key_payload);
 
@@ -858,9 +858,9 @@ class paged_attention_kernel {
       uint32_t block_id = ctx.block_table[cur_bid];
 
       constexpr uint32_t boundary_v_y = block_size;
-      uint32_t start_v_x = ctx.kv_head_id * args.head_size + ctx.sg_id * head_size_per_sg;
+      uint32_t start_v_x = ctx.kv_head_id * max_head_size + ctx.sg_id * head_size_per_sg;
       uint32_t boundary_v_x = start_v_x + head_size_per_sg;
-      uint32_t pitch_v = args.num_kv_heads * args.head_size;
+      uint32_t pitch_v = args.num_kv_heads * max_head_size;
       auto* cur_value_cache = args.value_cache + block_id * ctx.kv_block_stride;
       value_payload_t value_payload(
           cur_value_cache, boundary_v_x, boundary_v_y, pitch_v, start_v_x, 0);
@@ -889,12 +889,12 @@ class paged_attention_kernel {
         msg_type::block_2d,
         arch_tag>;
     
-    uint32_t start_o_x = ctx.partition_id * args.head_size + ctx.sg_id * head_size_per_sg; 
+    uint32_t start_o_x = ctx.partition_id * max_head_size + ctx.sg_id * head_size_per_sg; 
     uint32_t boundary_o_x = start_o_x + head_size_per_sg;
     constexpr uint32_t boundary_o_y = query_group_size;
-    uint32_t pitch_o = ctx.max_num_partitions * args.head_size;
-    auto* cur_out = args.out + ctx.seq_id * args.num_heads * ctx.max_num_partitions * args.head_size +
-        ctx.kv_head_id * query_group_size * ctx.max_num_partitions * args.head_size;
+    uint32_t pitch_o = ctx.max_num_partitions * max_head_size;
+    auto* cur_out = args.out + ctx.seq_id * args.num_heads * ctx.max_num_partitions * max_head_size +
+        ctx.kv_head_id * query_group_size * ctx.max_num_partitions * max_head_size;
 
     out_st_payload_t out_st_payload(
         cur_out, boundary_o_x, boundary_o_y, pitch_o, start_o_x, 0);
@@ -1231,7 +1231,7 @@ class paged_attention_reduce {
     accum_t inv_global_exp_sum = 1.0f / global_exp_sum;
 
     tmp_tile_t mat_tmp_out(0);
-    const int loop_count = DIVIDE_ROUND_UP(args.head_size, head_size_stride);
+    const int loop_count = DIVIDE_ROUND_UP(max_head_size, head_size_stride);
 
     int32_t base_x =
         (ctx.seq_id * args.num_heads + ctx.head_id) * args.max_num_partitions;
@@ -1241,16 +1241,16 @@ class paged_attention_reduce {
          start_x += ctx.wg_partition_stride, row_i++) {
       tmp_payload_t tmp_payload(
           args.tmp_out,
-          args.head_size,
+          max_head_size,
           boundary_x,
-          args.head_size,
+          max_head_size,
           0,
           base_x + start_x);
       tmp_prefetch_payload_t tmp_prefetch_payload(
           args.tmp_out,
-          args.head_size,
+          max_head_size,
           boundary_x,
-          args.head_size,
+          max_head_size,
           0,
           base_x + start_x);
 
@@ -1279,7 +1279,7 @@ class paged_attention_reduce {
             mat_tmp_out,
             tmp_payload,
             tmp_prefetch_payload,
-            args.head_size,
+            max_head_size,
             boundary_x);
 
         tmp_acc_tile_t mat_tmp_out_acc;
@@ -1343,13 +1343,13 @@ class paged_attention_reduce {
       ctx.nbarrier.arrive_wait();
 
     // load out data to register
-    uint32_t boundary_x = args.head_size;
+    uint32_t boundary_x = max_head_size;
     uint32_t boundary_y = args.num_seqs * args.num_heads;
-    uint32_t pitch = args.head_size;
+    uint32_t pitch = max_head_size;
     int32_t start_x = ctx.sg_id * head_size_per_sg;
     start_y = ctx.seq_id * args.num_heads + ctx.head_id;
 
-    if (start_x < args.head_size) {
+    if (start_x < max_head_size) {
       // load out data to register
       local_ld_tile_t mat_out_ld;
       local_ld_payload_t local_ld_payload(
