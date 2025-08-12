@@ -142,15 +142,13 @@ torch::Tensor ref_compute_score(torch::Tensor &query, torch::Tensor &key_cache,
       {num_seqs, num_heads, useful_blocks * block_size});
 }
 
-auto ref_softmax(torch::Tensor &scores, uint32_t partition_size = 512) {
+auto ref_softmax(torch::Tensor &scores, uint32_t partition_size = 512, bool use_partition = true) {
   // scores: [num_seqs, num_heads, seq_len]
   // now we need seq_len % partition_size == 0
   auto num_seqs = scores.size(0);
   auto num_heads = scores.size(1);
   auto seq_len = scores.size(2);
   auto num_partitions = (seq_len + partition_size - 1) / partition_size;
-  auto scores_view = scores.view(
-      {scores.size(0), scores.size(1), num_partitions, partition_size});
 
   torch::Tensor ref_max_logits =
       torch::empty({scores.size(0), scores.size(1), num_partitions},
@@ -160,19 +158,33 @@ auto ref_softmax(torch::Tensor &scores, uint32_t partition_size = 512) {
       torch::empty({scores.size(0), scores.size(1), num_partitions},
                    torch::kFloat32)
           .to(scores.device());
+  auto scores_view = use_partition ? 
+                     scores.view({num_seqs, num_heads, num_partitions, partition_size}) : 
+                     scores.view({num_seqs, num_heads, seq_len});
 
   for (int i = 0; i < num_seqs; ++i) {
     for (int j = 0; j < num_heads; ++j) {
-      for (int k = 0; k < num_partitions; ++k) {
-        // auto score_slice = scores_view[i][j][k];
+      if (use_partition) {
+        for (int k = 0; k < num_partitions; ++k) {
+          torch::Tensor ref_max_slice;
+          torch::Tensor max_indices;
+          std::tie(ref_max_slice, max_indices) =
+              torch::max(scores_view[i][j][k], /*dim=*/0, /*keepdim=*/false);
+          ref_max_logits[i][j][k] = ref_max_slice.item<float>();
+          scores_view[i][j][k] = torch::exp(scores_view[i][j][k] - ref_max_slice);
+          ref_exp_sums[i][j][k] = torch::sum(scores_view[i][j][k]);
+          scores_view[i][j][k] = scores_view[i][j][k] / ref_exp_sums[i][j][k];
+        }
+      } else {
+        // no partition, just do it directly
         torch::Tensor ref_max_slice;
         torch::Tensor max_indices;
         std::tie(ref_max_slice, max_indices) =
-            torch::max(scores_view[i][j][k], /*dim=*/0, /*keepdim=*/false);
-        ref_max_logits[i][j][k] = ref_max_slice.item<float>();
-        scores_view[i][j][k] = torch::exp(scores_view[i][j][k] - ref_max_slice);
-        ref_exp_sums[i][j][k] = torch::sum(scores_view[i][j][k]);
-        scores_view[i][j][k] = scores_view[i][j][k] / ref_exp_sums[i][j][k];
+            torch::max(scores_view[i][j], /*dim=*/0, /*keepdim=*/false);
+        ref_max_logits[i][j] = ref_max_slice.item<float>();
+        scores_view[i][j] = torch::exp(scores_view[i][j] - ref_max_slice);
+        ref_exp_sums[i][j] = torch::sum(scores_view[i][j]);
+        scores_view[i][j] = scores_view[i][j] / ref_exp_sums[i][j];
       }
     }
   }
@@ -182,7 +194,8 @@ auto ref_softmax(torch::Tensor &scores, uint32_t partition_size = 512) {
 
 torch::Tensor ref_compute_out(torch::Tensor &scores, torch::Tensor &value_cache,
                               torch::Tensor &block_tables,
-                              uint32_t partition_size = 512) {
+                              uint32_t partition_size = 512, 
+                              bool use_partition = true) {
   // scores: [num_seqs, num_heads, seq_len]
   // now we need seq_len % partition_size == 0
 
@@ -197,11 +210,6 @@ torch::Tensor ref_compute_out(torch::Tensor &scores, torch::Tensor &value_cache,
   auto head_size = value_cache.size(3);
   
   auto query_group_size = num_heads / num_kv_heads;
-  auto scores_view = scores
-                         .view({num_seqs, num_kv_heads, query_group_size,
-                                num_partitions, partition_size})
-                         .transpose(2, 3)
-                         .contiguous();
 
   uint32_t useful_blocks = (seq_len + block_size - 1) / block_size;
 
@@ -209,6 +217,9 @@ torch::Tensor ref_compute_out(torch::Tensor &scores, torch::Tensor &value_cache,
                                        query_group_size, head_size},
                                       torch::kHalf)
                              .to(scores.device());
+  torch::Tensor ultimate_output = torch::zeros(
+      {num_seqs, num_kv_heads, query_group_size, head_size}, torch::kHalf)
+      .to(scores.device());
   for (int j = 0; j < num_kv_heads; ++j) {
     for (int i = 0; i < num_seqs; ++i) {
       auto start_block = block_tables[i];
@@ -219,20 +230,42 @@ torch::Tensor ref_compute_out(torch::Tensor &scores, torch::Tensor &value_cache,
         value_blocks.push_back(value_slice);
       }
       auto value_tensor = torch::cat(value_blocks, /*dim=*/0);
-      /* std::cout << "value_tensor shape: " << value_tensor.sizes() << std::endl; */
-      for (int k = 0; k < num_partitions; ++k) {
-        auto score_slice = scores_view[i][j][k];
-        auto value_partition =
-            value_tensor.slice(0, k * partition_size, (k + 1) * partition_size)
-                .contiguous();
+      std::cout << "value_tensor shape: " << value_tensor.sizes() << std::endl;
+      if (use_partition) {
+        for (int k = 0; k < num_partitions; ++k) {
+          auto scores_view = scores
+                                 .view({num_seqs, num_kv_heads, query_group_size,
+                                        num_partitions, partition_size})
+                                 .transpose(2, 3)
+                                 .contiguous();
+          auto score_slice = scores_view[i][j][k];
+          auto value_partition =
+              value_tensor.slice(0, k * partition_size, (k + 1) * partition_size)
+                  .contiguous();
 
-        /* std::cout << "score_slice shape: " << score_slice.sizes() << std::endl; */
-        tem_output[i][j][k] = torch::matmul(score_slice, value_partition);
+          std::cout << "score_slice shape: " << score_slice.sizes() << std::endl;
+          tem_output[i][j][k] = torch::matmul(score_slice, value_partition);
+        }
+      } else {
+        // no partition, just do it directly
+        auto scores_view = scores
+                               .view({num_seqs, num_kv_heads, query_group_size,
+                                      seq_len})
+                               .contiguous();
+        auto score_slice = scores_view[i][j];
+        auto value_partition = value_tensor.contiguous();
+        std::cout << "score_slice shape: " << score_slice.sizes() << std::endl;
+        ultimate_output[i][j] = torch::matmul(score_slice, value_partition);
       }
     }
   }
-  return tem_output.transpose(2, 3).contiguous().view(
-      {num_seqs, num_heads, num_partitions, head_size});
+  if (use_partition) {
+    return tem_output.transpose(2, 3).contiguous().view(
+        {num_seqs, num_heads, num_partitions, head_size});
+  } else {
+    return ultimate_output.contiguous().view(
+        {num_seqs, num_heads, head_size});
+  }
 }
 
 static std::string shape_to_string(const c10::IntArrayRef& shape) {
@@ -422,6 +455,8 @@ int main(int argc, char *argv[]) {
       cxxopts::value<uint32_t>()->default_value("128"))(
       "sl,context_len", "context length",
       cxxopts::value<uint32_t>()->default_value("512"))(
+      "acc", "if run accuracy test",
+      cxxopts::value<bool>()->default_value("false"))(
       "loop", "loop num to run",
       cxxopts::value<uint32_t>()->default_value("10"))(
       "warm", "warm num to run",
@@ -451,6 +486,7 @@ int main(int argc, char *argv[]) {
   uint32_t num_queries_per_tokens = num_heads / num_kv_heads;
   uint32_t num_iters = result["loop"].as<uint32_t>();
   uint32_t num_warm = result["warm"].as<uint32_t>();
+  bool acc = result["acc"].as<bool>();
 
   uint32_t num_blocks = num_seqs * max_blocks_per_seq;
 
@@ -532,21 +568,7 @@ int main(int argc, char *argv[]) {
   auto *block_tables_ptr = block_tables.data_ptr();
   auto *context_lens_ptr = context_lens.data_ptr();
 
-  auto ref_scores =
-      ref_compute_score(query, key_cache, block_tables, context_lens);
-  std::cout << "ref_scores shape: " << ref_scores.sizes()
-            << " dtype: " << ref_scores.dtype() << std::endl;
-  // print_tensor_slice(ref_scores[0], 0, 8, 0, 16);
-  auto [ref_max_logits, ref_exp_sums] = ref_softmax(ref_scores, partition_size);
-
-  ref_scores = ref_scores.to(torch::kHalf);
-  
-  printf("\n\n---------------------------------------------\n\n");
-
-  int64_t r_start = 0, r_end = r_start + 16;
-  int64_t c_start = 0, c_end = c_start + 16;
-  
-  if (false) {
+  if (acc) {
     dispatch_paged_attention<T, U, arch_tag>(
         head_size, block_size, max_logits_ptr, exp_sums_ptr,
         reinterpret_cast<T *>(output_ptr),
@@ -560,24 +582,25 @@ int main(int argc, char *argv[]) {
         max_blocks_per_seq, softcap);
     
     // ref_scores = torch::ones_like(ref_scores).to(torch::kHalf);
+    auto ref_scores =
+        ref_compute_score(query, key_cache, block_tables, context_lens);
+    auto [ref_max_logits, ref_exp_sums] = ref_softmax(ref_scores, partition_size, false);
+    ref_scores = ref_scores.to(torch::kHalf);
+
+    int64_t r_start = 0, r_end = r_start + 16;
+    int64_t c_start = 0, c_end = c_start + 16;
     auto ref_tem_output =
-        ref_compute_out(ref_scores, value_cache, block_tables, partition_size);
+        ref_compute_out(ref_scores, value_cache, block_tables, partition_size, false);
 
-    std::cout << "ref_tem_output shape: " << ref_tem_output.sizes()
-              << " dtype: " << ref_tem_output.dtype() << std::endl;
-
-    ref_tem_output = ref_tem_output.transpose(1, 2).contiguous();
-    // print_tensor_slice(ref_tem_output[0][0].to(torch::kFloat32), r_start, r_end, c_start, c_end);
-    
-    printf("\n\n---------------------------------------------\n\n");
-
-    auto tem_output_trans = tem_output.transpose(1, 2).contiguous();
+    // ref_tem_output = ref_tem_output.transpose(1, 2).contiguous();
+    // auto tem_output_trans = tem_output.transpose(1, 2).contiguous();
     // print_tensor_slice(tem_output_trans[0][0].to(torch::kFloat32), r_start, r_end,
     //                    c_start, c_end);
     // assert_allclose(debug_output.to(torch::kFloat32), ref_scores.to(torch::kFloat32));
-    assert_allclose(max_logits, ref_max_logits);
-    assert_allclose(exp_sums, ref_exp_sums);
-    assert_allclose(tem_output_trans.to(torch::kFloat32), ref_tem_output.to(torch::kFloat32));
+    // assert_allclose(max_logits, ref_max_logits);
+    // assert_allclose(exp_sums, ref_exp_sums);
+    // assert_allclose(tem_output_trans.to(torch::kFloat32), ref_tem_output.to(torch::kFloat32));
+    assert_allclose(output.to(torch::kFloat32), ref_tem_output.to(torch::kFloat32));
   }
 
   // performance test
