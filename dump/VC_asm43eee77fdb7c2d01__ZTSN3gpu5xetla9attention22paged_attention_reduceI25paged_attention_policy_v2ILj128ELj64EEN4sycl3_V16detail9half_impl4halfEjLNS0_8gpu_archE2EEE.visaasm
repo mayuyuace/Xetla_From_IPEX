@@ -1,0 +1,1028 @@
+.version 4.1
+
+.kernel "_ZTSN3gpu5xetla9attention22paged_attention_reduceI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EEE"
+
+/// VISA Predefined Variables
+// .decl V0 v_type=G v_name=%null
+// .decl V1 v_type=G v_name=%thread_x
+// .decl V2 v_type=G v_name=%thread_y
+// .decl V3 v_type=G v_name=%group_id_x
+// .decl V4 v_type=G v_name=%group_id_y
+// .decl V5 v_type=G v_name=%group_id_z
+// .decl V6 v_type=G v_name=%tsc
+// .decl V7 v_type=G v_name=%r0
+// .decl V8 v_type=G v_name=%arg
+// .decl V9 v_type=G v_name=%retval
+// .decl V10 v_type=G v_name=%sp
+// .decl V11 v_type=G v_name=%fp
+// .decl V12 v_type=G v_name=%hw_id
+// .decl V13 v_type=G v_name=%sr0
+// .decl V14 v_type=G v_name=%cr0
+// .decl V15 v_type=G v_name=%ce0
+// .decl V16 v_type=G v_name=%dbg0
+// .decl V17 v_type=G v_name=%color
+// .decl V18 v_type=G v_name=%impl_arg_buf_ptr
+// .decl V19 v_type=G v_name=%local_id_buf_ptr
+// .decl V20 v_type=G v_name=%msg0
+// .decl V21 v_type=G v_name=%scratchloc
+// .decl T0 v_type=T v_name=%slm
+// .decl T1 v_type=T v_name=T1
+// .decl T2 v_type=T v_name=T2
+// .decl T3 v_type=T v_name=TSS
+// .decl T4 v_type=T v_name=%bss
+// .decl T5 v_type=T v_name=%scratch
+
+.decl V32 v_type=G type=uq num_elts=1 align=qword
+.decl V33 v_type=G type=uq num_elts=1 align=qword
+.decl V34 v_type=G type=d num_elts=1 align=dword
+.decl V35 v_type=G type=d num_elts=1 align=dword
+.decl V36 v_type=G type=d num_elts=1 align=dword
+.decl V37 v_type=G type=w num_elts=3 align=word
+.decl V38 v_type=G type=d num_elts=3 align=dword
+.decl V39 v_type=G type=q num_elts=1 align=qword
+.decl V40 v_type=G type=d num_elts=4 align=dword
+.decl V41 v_type=G type=d num_elts=4 align=dword
+.decl V42 v_type=G type=d num_elts=3 align=dword
+.decl V43 v_type=G type=d num_elts=2 align=dword
+.decl V44 v_type=G type=d num_elts=3 align=dword
+.decl V45 v_type=G type=d num_elts=1 align=dword
+.decl V46 v_type=G type=d num_elts=3 align=dword
+.decl V47 v_type=G type=d num_elts=1 align=dword
+.decl V48 v_type=G type=uq num_elts=1 align=qword
+.decl V49 v_type=G type=q num_elts=1 align=qword
+.decl V50 v_type=G type=q num_elts=1 align=GRF
+.decl V51 v_type=G type=d num_elts=1 align=GRF
+.decl V52 v_type=G type=d num_elts=1 align=dword
+.decl V53 v_type=G type=d num_elts=1 align=dword
+.decl V54 v_type=G type=uq num_elts=1 align=qword
+.decl V55 v_type=G type=d num_elts=1 align=dword
+.decl V56 v_type=G type=d num_elts=1 align=dword
+.decl V57 v_type=G type=f num_elts=1 align=dword
+.decl V58 v_type=G type=d num_elts=1 align=dword
+.decl V59 v_type=G type=d num_elts=1 align=dword
+.decl V60 v_type=G type=d num_elts=16 align=GRF
+.decl V61 v_type=G type=d num_elts=16 align=GRF
+.decl V62 v_type=G type=d num_elts=16 align=GRF
+.decl V63 v_type=G type=d num_elts=16 align=GRF
+.decl V64 v_type=G type=d num_elts=16 align=GRF
+.decl V65 v_type=G type=d num_elts=16 align=GRF
+.decl V66 v_type=G type=d num_elts=16 align=GRF
+.decl V67 v_type=G type=d num_elts=16 align=GRF
+.decl V68 v_type=G type=f num_elts=8 align=GRF
+.decl V69 v_type=G type=f num_elts=8 align=GRF
+.decl V70 v_type=G type=f num_elts=8 align=GRF
+.decl V71 v_type=G type=f num_elts=8 align=GRF
+.decl V72 v_type=G type=f num_elts=8 align=GRF
+.decl V73 v_type=G type=f num_elts=8 align=GRF
+.decl V74 v_type=G type=f num_elts=8 align=GRF
+.decl V75 v_type=G type=f num_elts=8 align=GRF
+.decl V76 v_type=G type=w num_elts=1 align=word
+.decl V77 v_type=G type=d num_elts=1 align=dword
+.decl V78 v_type=G type=d num_elts=8 align=dword
+.decl V79 v_type=G type=d num_elts=1 align=dword
+.decl V80 v_type=G type=w num_elts=1 align=word
+.decl V81 v_type=G type=d num_elts=1 align=dword
+.decl V82 v_type=G type=f num_elts=8 align=dword
+.decl V83 v_type=G type=f num_elts=4 align=dword
+.decl V84 v_type=G type=f num_elts=2 align=dword
+.decl V85 v_type=G type=d num_elts=1 align=dword
+.decl V86 v_type=G type=f num_elts=32 align=GRF
+.decl V87 v_type=G type=f num_elts=1 align=GRF
+.decl V88 v_type=G type=d num_elts=1 align=GRF
+.decl V89 v_type=G type=d num_elts=1 align=dword
+.decl V90 v_type=G type=d num_elts=16 align=GRF
+.decl V91 v_type=G type=d num_elts=1 align=GRF
+.decl V92 v_type=G type=f num_elts=8 align=GRF
+.decl V93 v_type=G type=f num_elts=4 align=dword
+.decl V94 v_type=G type=f num_elts=2 align=dword
+.decl V95 v_type=G type=d num_elts=1 align=dword
+.decl V96 v_type=G type=d num_elts=16 align=GRF
+.decl V97 v_type=G type=uq num_elts=1 align=qword
+.decl V98 v_type=G type=f num_elts=1 align=dword
+.decl V99 v_type=G type=f num_elts=1 align=dword
+.decl V100 v_type=G type=d num_elts=1 align=dword
+.decl V101 v_type=G type=d num_elts=16 align=GRF
+.decl V102 v_type=G type=d num_elts=16 align=GRF
+.decl V103 v_type=G type=d num_elts=16 align=GRF
+.decl V104 v_type=G type=d num_elts=16 align=GRF
+.decl V105 v_type=G type=d num_elts=16 align=GRF
+.decl V106 v_type=G type=d num_elts=16 align=GRF
+.decl V107 v_type=G type=d num_elts=16 align=GRF
+.decl V108 v_type=G type=d num_elts=16 align=GRF
+.decl V109 v_type=G type=f num_elts=8 align=GRF
+.decl V110 v_type=G type=f num_elts=8 align=GRF
+.decl V111 v_type=G type=f num_elts=8 align=GRF
+.decl V112 v_type=G type=f num_elts=8 align=GRF
+.decl V113 v_type=G type=f num_elts=8 align=GRF
+.decl V114 v_type=G type=f num_elts=8 align=GRF
+.decl V115 v_type=G type=f num_elts=8 align=GRF
+.decl V116 v_type=G type=f num_elts=8 align=GRF
+.decl V117 v_type=G type=w num_elts=1 align=word
+.decl V118 v_type=G type=d num_elts=1 align=dword
+.decl V119 v_type=G type=d num_elts=8 align=dword
+.decl V120 v_type=G type=f num_elts=8 align=dword
+.decl V121 v_type=G type=d num_elts=1 align=dword
+.decl V122 v_type=G type=d num_elts=1 align=dword
+.decl V123 v_type=G type=w num_elts=1 align=word
+.decl V124 v_type=G type=f num_elts=8 align=dword
+.decl V125 v_type=G type=d num_elts=1 align=dword
+.decl V126 v_type=G type=w num_elts=1 align=word
+.decl V127 v_type=G type=f num_elts=8 align=dword
+.decl V128 v_type=G type=f num_elts=4 align=dword
+.decl V129 v_type=G type=f num_elts=2 align=dword
+.decl V130 v_type=G type=f num_elts=1 align=GRF
+.decl V131 v_type=G type=d num_elts=1 align=dword
+.decl V132 v_type=G type=d num_elts=16 align=GRF
+.decl V133 v_type=G type=d num_elts=1 align=GRF
+.decl V134 v_type=G type=f num_elts=8 align=GRF
+.decl V135 v_type=G type=f num_elts=4 align=dword
+.decl V136 v_type=G type=f num_elts=2 align=dword
+.decl V137 v_type=G type=d num_elts=1 align=dword
+.decl V138 v_type=G type=f num_elts=1 align=dword
+.decl V139 v_type=G type=d num_elts=1 align=dword
+.decl V140 v_type=G type=d num_elts=1 align=dword
+.decl V141 v_type=G type=d num_elts=1 align=dword
+.decl V142 v_type=G type=f num_elts=32 align=GRF
+.decl V143 v_type=G type=d num_elts=16 align=GRF
+.decl V144 v_type=G type=d num_elts=16 align=GRF
+.decl V145 v_type=G type=w num_elts=1 align=word
+.decl V146 v_type=G type=d num_elts=1 align=dword
+.decl V147 v_type=G type=d num_elts=16 align=GRF
+.decl V148 v_type=G type=d num_elts=16 align=GRF
+.decl V149 v_type=G type=d num_elts=16 align=GRF
+.decl V150 v_type=G type=hf num_elts=128 align=GRF
+.decl V151 v_type=G type=hf num_elts=128 align=GRF
+.decl V152 v_type=G type=hf num_elts=32 align=GRF
+.decl V153 v_type=G type=hf num_elts=32 align=GRF
+.decl V154 v_type=G type=hf num_elts=32 align=GRF
+.decl V155 v_type=G type=hf num_elts=32 align=GRF
+.decl V156 v_type=G type=hf num_elts=32 align=GRF
+.decl V157 v_type=G type=hf num_elts=32 align=GRF
+.decl V158 v_type=G type=hf num_elts=32 align=GRF
+.decl V159 v_type=G type=hf num_elts=32 align=GRF
+.decl V160 v_type=G type=f num_elts=16 align=GRF
+.decl V161 v_type=G type=f num_elts=16 align=GRF
+.decl V162 v_type=G type=f num_elts=16 align=GRF
+.decl V163 v_type=G type=f num_elts=16 align=GRF
+.decl V164 v_type=G type=f num_elts=16 align=GRF
+.decl V165 v_type=G type=f num_elts=16 align=GRF
+.decl V166 v_type=G type=f num_elts=16 align=GRF
+.decl V167 v_type=G type=f num_elts=16 align=GRF
+.decl V168 v_type=G type=f num_elts=16 align=GRF
+.decl V169 v_type=G type=f num_elts=16 align=GRF
+.decl V170 v_type=G type=f num_elts=16 align=GRF
+.decl V171 v_type=G type=f num_elts=16 align=GRF
+.decl V172 v_type=G type=f num_elts=16 align=GRF
+.decl V173 v_type=G type=f num_elts=16 align=GRF
+.decl V174 v_type=G type=f num_elts=16 align=GRF
+.decl V175 v_type=G type=f num_elts=16 align=GRF
+.decl V176 v_type=G type=f num_elts=32 align=GRF
+.decl V177 v_type=G type=f num_elts=32 align=GRF
+.decl V178 v_type=G type=f num_elts=32 align=GRF
+.decl V179 v_type=G type=f num_elts=32 align=GRF
+.decl V180 v_type=G type=f num_elts=32 align=GRF
+.decl V181 v_type=G type=f num_elts=32 align=GRF
+.decl V182 v_type=G type=f num_elts=32 align=GRF
+.decl V183 v_type=G type=f num_elts=32 align=GRF
+.decl V184 v_type=G type=w num_elts=1 align=word
+.decl V185 v_type=G type=f num_elts=32 align=GRF
+.decl V186 v_type=G type=f num_elts=32 align=GRF
+.decl V187 v_type=G type=f num_elts=32 align=GRF
+.decl V188 v_type=G type=f num_elts=32 align=GRF
+.decl V189 v_type=G type=f num_elts=32 align=GRF
+.decl V190 v_type=G type=f num_elts=32 align=GRF
+.decl V191 v_type=G type=f num_elts=32 align=GRF
+.decl V192 v_type=G type=d num_elts=128 align=GRF
+.decl V193 v_type=G type=d num_elts=1 align=dword
+.decl V194 v_type=G type=d num_elts=8 align=dword
+.decl V195 v_type=G type=d num_elts=16 align=GRF
+.decl V196 v_type=G type=d num_elts=16 align=GRF
+.decl V197 v_type=G type=d num_elts=16 align=GRF
+.decl V198 v_type=G type=d num_elts=16 align=GRF
+.decl V199 v_type=G type=d num_elts=16 align=GRF
+.decl V200 v_type=G type=d num_elts=16 align=GRF
+.decl V201 v_type=G type=d num_elts=16 align=GRF
+.decl V202 v_type=G type=d num_elts=16 align=GRF
+.decl V203 v_type=G type=d num_elts=16 align=GRF
+.decl V204 v_type=G type=d num_elts=16 align=GRF
+.decl V205 v_type=G type=d num_elts=16 align=GRF
+.decl V206 v_type=G type=d num_elts=16 align=GRF
+.decl V207 v_type=G type=d num_elts=16 align=GRF
+.decl V208 v_type=G type=d num_elts=16 align=GRF
+.decl V209 v_type=G type=d num_elts=16 align=GRF
+.decl V210 v_type=G type=d num_elts=16 align=GRF
+.decl V211 v_type=G type=d num_elts=1 align=dword
+.decl V212 v_type=G type=d num_elts=16 align=GRF
+.decl V213 v_type=G type=d num_elts=1 align=dword
+.decl V214 v_type=G type=d num_elts=1 align=dword
+.decl V215 v_type=G type=d num_elts=16 align=GRF
+.decl V216 v_type=G type=d num_elts=32 align=GRF
+.decl V217 v_type=G type=d num_elts=32 align=GRF
+.decl V218 v_type=G type=d num_elts=16 align=GRF
+.decl V219 v_type=G type=d num_elts=32 align=GRF
+.decl V220 v_type=G type=f num_elts=64 align=GRF
+.decl V221 v_type=G type=f num_elts=64 align=GRF
+.decl V222 v_type=G type=d num_elts=1 align=dword
+.decl V223 v_type=G type=f num_elts=16 align=GRF
+.decl V224 v_type=G type=w num_elts=16 align=GRF
+.decl V225 v_type=G type=d num_elts=16 align=GRF
+.decl V226 v_type=G type=uw num_elts=3 alias=<V37, 0>
+.decl V227 v_type=G type=d num_elts=2 alias=<V43, 0>
+.decl V228 v_type=G type=d num_elts=3 alias=<V42, 0>
+.decl V229 v_type=G type=d num_elts=3 alias=<V38, 0>
+.decl V230 v_type=G type=d num_elts=3 alias=<V44, 0>
+.decl V231 v_type=G type=d num_elts=1 alias=<V45, 0>
+.decl V232 v_type=G type=d num_elts=3 alias=<V46, 0>
+.decl V233 v_type=G type=ud num_elts=1 alias=<V52, 0>
+.decl V234 v_type=G type=q num_elts=1 alias=<V49, 0>
+.decl V235 v_type=G type=q num_elts=1 alias=<V50, 0>
+.decl V236 v_type=G type=q num_elts=1 alias=<V48, 0>
+.decl V237 v_type=G type=uq num_elts=1 alias=<V50, 0>
+.decl V238 v_type=G type=d num_elts=1 alias=<V51, 0>
+.decl V239 v_type=G type=ud num_elts=1 alias=<V51, 0>
+.decl V240 v_type=G type=d num_elts=1 alias=<V140, 0>
+.decl V241 v_type=G type=ud num_elts=1 alias=<V35, 0>
+.decl V242 v_type=G type=ud num_elts=1 alias=<V53, 0>
+.decl V243 v_type=G type=ud num_elts=1 alias=<V47, 0>
+.decl V244 v_type=G type=q num_elts=1 alias=<V54, 0>
+.decl V245 v_type=G type=q num_elts=8 alias=<V60, 0>
+.decl V246 v_type=G type=ud num_elts=1 alias=<V55, 0>
+.decl V247 v_type=G type=ud num_elts=16 alias=<V60, 0>
+.decl V248 v_type=G type=d num_elts=1 alias=<V56, 0>
+.decl V249 v_type=G type=d num_elts=1 alias=<V36, 0>
+.decl V250 v_type=G type=d num_elts=16 alias=<V60, 0>
+.decl V251 v_type=G type=d num_elts=16 alias=<V61, 0>
+.decl V252 v_type=G type=d num_elts=16 alias=<V62, 0>
+.decl V253 v_type=G type=d num_elts=16 alias=<V63, 0>
+.decl V254 v_type=G type=d num_elts=16 alias=<V64, 0>
+.decl V255 v_type=G type=d num_elts=16 alias=<V65, 0>
+.decl V256 v_type=G type=d num_elts=16 alias=<V66, 0>
+.decl V257 v_type=G type=d num_elts=16 alias=<V67, 0>
+.decl V258 v_type=G type=ud num_elts=1 alias=<V140, 0>
+.decl V259 v_type=G type=d num_elts=8 alias=<V75, 0>
+.decl V260 v_type=G type=d num_elts=8 alias=<V68, 0>
+.decl V261 v_type=G type=d num_elts=8 alias=<V69, 0>
+.decl V262 v_type=G type=d num_elts=8 alias=<V70, 0>
+.decl V263 v_type=G type=d num_elts=8 alias=<V71, 0>
+.decl V264 v_type=G type=d num_elts=8 alias=<V72, 0>
+.decl V265 v_type=G type=d num_elts=8 alias=<V73, 0>
+.decl V266 v_type=G type=d num_elts=8 alias=<V74, 0>
+.decl V267 v_type=G type=w num_elts=1 alias=<V76, 0>
+.decl V268 v_type=G type=w num_elts=2 alias=<V59, 0>
+.decl V269 v_type=G type=uw num_elts=1 alias=<V76, 0>
+.decl V270 v_type=G type=d num_elts=1 alias=<V85, 0>
+.decl V271 v_type=G type=d num_elts=1 alias=<V59, 0>
+.decl V272 v_type=G type=ud num_elts=1 alias=<V77, 0>
+.decl V273 v_type=G type=ud num_elts=1 alias=<V58, 0>
+.decl V274 v_type=G type=ud num_elts=8 alias=<V78, 0>
+.decl V275 v_type=G type=w num_elts=1 alias=<V80, 0>
+.decl V276 v_type=G type=w num_elts=2 alias=<V79, 0>
+.decl V277 v_type=G type=uw num_elts=1 alias=<V80, 0>
+.decl V278 v_type=G type=d num_elts=1 alias=<V81, 0>
+.decl V279 v_type=G type=d num_elts=1 alias=<V79, 0>
+.decl V280 v_type=G type=d num_elts=1 alias=<V88, 0>
+.decl V281 v_type=G type=ud num_elts=1 alias=<V88, 0>
+.decl V282 v_type=G type=q num_elts=4 alias=<V92, 0>
+.decl V283 v_type=G type=ud num_elts=1 alias=<V91, 0>
+.decl V284 v_type=G type=q num_elts=1 alias=<V97, 0>
+.decl V285 v_type=G type=q num_elts=8 alias=<V101, 0>
+.decl V286 v_type=G type=ud num_elts=16 alias=<V101, 0>
+.decl V287 v_type=G type=d num_elts=16 alias=<V101, 0>
+.decl V288 v_type=G type=d num_elts=16 alias=<V102, 0>
+.decl V289 v_type=G type=d num_elts=16 alias=<V103, 0>
+.decl V290 v_type=G type=d num_elts=16 alias=<V104, 0>
+.decl V291 v_type=G type=d num_elts=16 alias=<V105, 0>
+.decl V292 v_type=G type=d num_elts=16 alias=<V106, 0>
+.decl V293 v_type=G type=d num_elts=16 alias=<V107, 0>
+.decl V294 v_type=G type=d num_elts=16 alias=<V108, 0>
+.decl V295 v_type=G type=d num_elts=8 alias=<V116, 0>
+.decl V296 v_type=G type=d num_elts=8 alias=<V109, 0>
+.decl V297 v_type=G type=d num_elts=8 alias=<V110, 0>
+.decl V298 v_type=G type=d num_elts=8 alias=<V111, 0>
+.decl V299 v_type=G type=d num_elts=8 alias=<V112, 0>
+.decl V300 v_type=G type=d num_elts=8 alias=<V113, 0>
+.decl V301 v_type=G type=d num_elts=8 alias=<V114, 0>
+.decl V302 v_type=G type=d num_elts=8 alias=<V115, 0>
+.decl V303 v_type=G type=w num_elts=1 alias=<V117, 0>
+.decl V304 v_type=G type=w num_elts=2 alias=<V121, 0>
+.decl V305 v_type=G type=uw num_elts=1 alias=<V117, 0>
+.decl V306 v_type=G type=d num_elts=1 alias=<V121, 0>
+.decl V307 v_type=G type=ud num_elts=1 alias=<V118, 0>
+.decl V308 v_type=G type=ud num_elts=1 alias=<V100, 0>
+.decl V309 v_type=G type=ud num_elts=8 alias=<V119, 0>
+.decl V310 v_type=G type=w num_elts=1 alias=<V123, 0>
+.decl V311 v_type=G type=w num_elts=2 alias=<V122, 0>
+.decl V312 v_type=G type=uw num_elts=1 alias=<V123, 0>
+.decl V313 v_type=G type=f num_elts=8 alias=<V124, 0>
+.decl V314 v_type=G type=f num_elts=32 alias=<V86, 0>
+.decl V315 v_type=G type=f num_elts=8 alias=<V120, 0>
+.decl V316 v_type=G type=f num_elts=32 alias=<V142, 0>
+.decl V317 v_type=G type=d num_elts=1 alias=<V122, 0>
+.decl V318 v_type=G type=w num_elts=1 alias=<V126, 0>
+.decl V319 v_type=G type=w num_elts=2 alias=<V125, 0>
+.decl V320 v_type=G type=uw num_elts=1 alias=<V126, 0>
+.decl V321 v_type=G type=f num_elts=8 alias=<V127, 0>
+.decl V322 v_type=G type=d num_elts=1 alias=<V125, 0>
+.decl V323 v_type=G type=f num_elts=4 alias=<V128, 0>
+.decl V324 v_type=G type=f num_elts=2 alias=<V129, 0>
+.decl V325 v_type=G type=f num_elts=1 alias=<V130, 0>
+.decl V326 v_type=G type=q num_elts=4 alias=<V134, 0>
+.decl V327 v_type=G type=ud num_elts=1 alias=<V133, 0>
+.decl V328 v_type=G type=f num_elts=4 alias=<V135, 0>
+.decl V329 v_type=G type=f num_elts=8 alias=<V134, 0>
+.decl V330 v_type=G type=f num_elts=2 alias=<V136, 0>
+.decl V331 v_type=G type=f num_elts=1 alias=<V138, 0>
+.decl V332 v_type=G type=d num_elts=1 alias=<V137, 0>
+.decl V333 v_type=G type=d num_elts=1 alias=<V53, 0>
+.decl V334 v_type=G type=d num_elts=1 alias=<V139, 0>
+.decl V335 v_type=G type=f num_elts=128 alias=<V192, 0>
+.decl V336 v_type=G type=q num_elts=1 alias=<V33, 0>
+.decl V337 v_type=G type=q num_elts=8 alias=<V144, 0>
+.decl V338 v_type=G type=d num_elts=16 alias=<V144, 0>
+.decl V339 v_type=G type=d num_elts=16 alias=<V148, 0>
+.decl V340 v_type=G type=q num_elts=8 alias=<V143, 0>
+.decl V341 v_type=G type=d num_elts=16 alias=<V143, 0>
+.decl V342 v_type=G type=d num_elts=16 alias=<V149, 0>
+.decl V343 v_type=G type=w num_elts=1 alias=<V145, 0>
+.decl V344 v_type=G type=w num_elts=2 alias=<V141, 0>
+.decl V345 v_type=G type=uw num_elts=1 alias=<V145, 0>
+.decl V346 v_type=G type=d num_elts=64 alias=<V150, 0>
+.decl V347 v_type=G type=d num_elts=64 alias=<V151, 0>
+.decl V348 v_type=G type=d num_elts=16 alias=<V147, 0>
+.decl V349 v_type=G type=f num_elts=32 alias=<V176, 0>
+.decl V350 v_type=G type=f num_elts=16 alias=<V160, 0>
+.decl V351 v_type=G type=f num_elts=16 alias=<V161, 0>
+.decl V352 v_type=G type=f num_elts=32 alias=<V177, 0>
+.decl V353 v_type=G type=f num_elts=16 alias=<V162, 0>
+.decl V354 v_type=G type=f num_elts=16 alias=<V163, 0>
+.decl V355 v_type=G type=f num_elts=32 alias=<V178, 0>
+.decl V356 v_type=G type=f num_elts=16 alias=<V164, 0>
+.decl V357 v_type=G type=f num_elts=16 alias=<V165, 0>
+.decl V358 v_type=G type=f num_elts=32 alias=<V179, 0>
+.decl V359 v_type=G type=f num_elts=16 alias=<V166, 0>
+.decl V360 v_type=G type=f num_elts=16 alias=<V167, 0>
+.decl V361 v_type=G type=f num_elts=32 alias=<V180, 0>
+.decl V362 v_type=G type=f num_elts=16 alias=<V168, 0>
+.decl V363 v_type=G type=f num_elts=16 alias=<V169, 0>
+.decl V364 v_type=G type=f num_elts=32 alias=<V181, 0>
+.decl V365 v_type=G type=f num_elts=16 alias=<V170, 0>
+.decl V366 v_type=G type=f num_elts=16 alias=<V171, 0>
+.decl V367 v_type=G type=f num_elts=32 alias=<V182, 0>
+.decl V368 v_type=G type=f num_elts=16 alias=<V172, 0>
+.decl V369 v_type=G type=f num_elts=16 alias=<V173, 0>
+.decl V370 v_type=G type=f num_elts=32 alias=<V183, 0>
+.decl V371 v_type=G type=f num_elts=16 alias=<V174, 0>
+.decl V372 v_type=G type=f num_elts=16 alias=<V175, 0>
+.decl V373 v_type=G type=w num_elts=1 alias=<V184, 0>
+.decl V374 v_type=G type=w num_elts=2 alias=<V146, 0>
+.decl V375 v_type=G type=f num_elts=32 alias=<V185, 0>
+.decl V376 v_type=G type=f num_elts=32 alias=<V186, 0>
+.decl V377 v_type=G type=f num_elts=32 alias=<V187, 0>
+.decl V378 v_type=G type=f num_elts=32 alias=<V188, 0>
+.decl V379 v_type=G type=f num_elts=32 alias=<V189, 0>
+.decl V380 v_type=G type=f num_elts=32 alias=<V190, 0>
+.decl V381 v_type=G type=f num_elts=32 alias=<V191, 0>
+.decl V382 v_type=G type=uw num_elts=1 alias=<V184, 0>
+.decl V383 v_type=G type=f num_elts=128 alias=<V192, 0>
+.decl V384 v_type=G type=d num_elts=1 alias=<V146, 0>
+.decl V385 v_type=G type=d num_elts=1 alias=<V141, 0>
+.decl V386 v_type=G type=d num_elts=1 alias=<V193, 0>
+.decl V387 v_type=G type=d num_elts=16 alias=<V195, 0>
+.decl V388 v_type=G type=d num_elts=8 alias=<V194, 0>
+.decl V389 v_type=G type=d num_elts=16 alias=<V196, 0>
+.decl V390 v_type=G type=ud num_elts=16 alias=<V196, 0>
+.decl V391 v_type=G type=d num_elts=16 alias=<V197, 0>
+.decl V392 v_type=G type=d num_elts=16 alias=<V198, 0>
+.decl V393 v_type=G type=ud num_elts=16 alias=<V198, 0>
+.decl V394 v_type=G type=d num_elts=16 alias=<V199, 0>
+.decl V395 v_type=G type=d num_elts=16 alias=<V200, 0>
+.decl V396 v_type=G type=ud num_elts=16 alias=<V200, 0>
+.decl V397 v_type=G type=d num_elts=16 alias=<V201, 0>
+.decl V398 v_type=G type=d num_elts=16 alias=<V202, 0>
+.decl V399 v_type=G type=ud num_elts=16 alias=<V202, 0>
+.decl V400 v_type=G type=d num_elts=16 alias=<V203, 0>
+.decl V401 v_type=G type=d num_elts=16 alias=<V204, 0>
+.decl V402 v_type=G type=ud num_elts=16 alias=<V204, 0>
+.decl V403 v_type=G type=d num_elts=16 alias=<V205, 0>
+.decl V404 v_type=G type=d num_elts=16 alias=<V206, 0>
+.decl V405 v_type=G type=ud num_elts=16 alias=<V206, 0>
+.decl V406 v_type=G type=d num_elts=16 alias=<V207, 0>
+.decl V407 v_type=G type=d num_elts=16 alias=<V208, 0>
+.decl V408 v_type=G type=ud num_elts=16 alias=<V208, 0>
+.decl V409 v_type=G type=d num_elts=16 alias=<V209, 0>
+.decl V410 v_type=G type=d num_elts=16 alias=<V210, 0>
+.decl V411 v_type=G type=ud num_elts=16 alias=<V210, 0>
+.decl V412 v_type=G type=d num_elts=1 alias=<V213, 0>
+.decl V413 v_type=G type=ud num_elts=1 alias=<V213, 0>
+.decl V414 v_type=G type=d num_elts=1 alias=<V214, 0>
+.decl V415 v_type=G type=d num_elts=16 alias=<V215, 0>
+.decl V416 v_type=G type=d num_elts=32 alias=<V216, 0>
+.decl V417 v_type=G type=d num_elts=32 alias=<V217, 0>
+.decl V418 v_type=G type=q num_elts=32 alias=<V220, 0>
+.decl V419 v_type=G type=ud num_elts=32 alias=<V217, 0>
+.decl V420 v_type=G type=d num_elts=16 alias=<V218, 0>
+.decl V421 v_type=G type=d num_elts=32 alias=<V219, 0>
+.decl V422 v_type=G type=q num_elts=32 alias=<V221, 0>
+.decl V423 v_type=G type=ud num_elts=32 alias=<V219, 0>
+.decl V424 v_type=G type=ud num_elts=1 alias=<V222, 0>
+.decl V425 v_type=G type=ud num_elts=1 alias=<V34, 0>
+.decl V426 v_type=G type=f num_elts=16 alias=<V223, 0>
+.decl V427 v_type=G type=f num_elts=64 alias=<V220, 0>
+.decl V428 v_type=G type=f num_elts=64 alias=<V221, 0>
+.decl V429 v_type=G type=hf num_elts=16 alias=<V224, 0>
+.decl V430 v_type=G type=q num_elts=1 alias=<V32, 0>
+.decl V431 v_type=G type=q num_elts=8 alias=<V225, 0>
+.decl V432 v_type=G type=ud num_elts=16 alias=<V225, 0>
+.decl A0 v_type=A num_elts=1
+.decl A1 v_type=A num_elts=1
+.decl A2 v_type=A num_elts=1
+.decl A3 v_type=A num_elts=1
+.decl A4 v_type=A num_elts=1
+.decl A5 v_type=A num_elts=1
+.decl A6 v_type=A num_elts=1
+.decl A7 v_type=A num_elts=1
+.decl P1 v_type=P num_elts=1
+.decl P2 v_type=P num_elts=1
+.decl P3 v_type=P num_elts=8
+.decl P4 v_type=P num_elts=1
+.decl P5 v_type=P num_elts=1
+.decl P6 v_type=P num_elts=1
+.decl P7 v_type=P num_elts=1
+.decl P8 v_type=P num_elts=1
+.decl P9 v_type=P num_elts=8
+.decl P10 v_type=P num_elts=1
+.decl P11 v_type=P num_elts=1
+.decl P12 v_type=P num_elts=1
+.decl P13 v_type=P num_elts=1
+.decl P14 v_type=P num_elts=1
+.decl P15 v_type=P num_elts=1
+.decl P16 v_type=P num_elts=1
+.input V32 offset=152 size=8
+.input V33 offset=160 size=8
+.input V54 offset=168 size=8
+.input V97 offset=176 size=8
+.input V48 offset=184 size=8
+.input V34 offset=192 size=4
+.input V35 offset=196 size=4
+.input V36 offset=200 size=4
+.implicit_LOCAL_ID V37 offset=64 size=6
+.implicit_LOCAL_SIZE V38 offset=128 size=12
+.implicit_UNDEFINED_12 V39 offset=144 size=8
+.kernel_attr SLMSize=5
+.kernel_attr PerThreadInputSize=64
+.kernel_attr NBarrierCnt=1
+.kernel_attr NumGRF=256
+.kernel_attr Target="cm"
+.kernel_attr SimdSize=32    
+
+.function "_ZTSN3gpu5xetla9attention22paged_attention_reduceI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EEE_BB_0"
+_ZTSN3gpu5xetla9attention22paged_attention_reduceI25paged_attention_policy_v2ILj128ELj64EEN4sycl3_V16detail9half_impl4halfEjLNS0_8gpu_archE2EEE_BB_0:
+    and (M1, 1) %cr0(0,0)<1> %cr0(0,0)<0;1,0> 0xbffffb0f:d                       /// $1
+    or (M1, 1) %cr0(0,0)<1> %cr0(0,0)<0;1,0> 0x400004c0:d                        /// $2
+    mov (M1, 1) V42(0,2)<1> V226(0,2)<0;1,0>                                     /// $3
+    mul (M1, 2) V227(0,0)<1> V228(0,2)<0;1,0> V229(0,0)<1;1,0>                   /// $4
+    add (M1, 2) V230(0,0)<1> V227(0,0)<1;1,0> V226(0,0)<1;1,0>                   /// $5
+    mul (M1, 1) V231(0,0)<1> V230(0,1)<0;1,0> V229(0,0)<0;1,0>                   /// $6
+    add (M1, 1) V232(0,0)<1> V231(0,0)<0;1,0> V226(0,0)<0;1,0>                   /// $7
+    mov (M1, 1) V52(0,0)<1> %group_id_z(0,0)<0;1,0>                              /// $8
+    mov (M1, 1) V49(0,0)<1> V233(0,0)<0;1,0>                                     /// $9
+    mov (M1, 1) V47(0,0)<1> %group_id_y(0,0)<0;1,0>                              /// $10
+    shl (M1, 1) V234(0,0)<1> V234(0,0)<0;1,0> 0x2:q                              /// $11
+    add (M1, 1) V235(0,0)<1> V236(0,0)<0;1,0> V234(0,0)<0;1,0>                   /// $12
+    lsc_load.ugm (M1, 1)  V51:d32  flat[V237]:a64                                /// $13
+    add (M1, 1) V238(0,0)<1> V238(0,0)<0;1,0> 0x1ff:d                            /// $14
+    shr (M1, 1) V239(0,0)<1> V239(0,0)<0;1,0> 0x9:ud                             /// $15
+    shl (M1, 1) V240(0,0)<1> V232(0,0)<0;1,0> 0x3:d                              /// $16
+    mul (M1, 1) V233(0,0)<1> V233(0,0)<0;1,0> V241(0,0)<0;1,0>                   /// $17
+    add (M1, 1) V242(0,0)<1> V233(0,0)<0;1,0> V243(0,0)<0;1,0>                   /// $18
+    mov (M1, 1) V245(0,0)<1> V244(0,0)<0;1,0>                                    /// $19
+    shl (M1, 1) V246(0,0)<1> V239(0,0)<0;1,0> 0x2:ud                             /// $20
+    add (M1, 1) V247(0,2)<1> V246(0,0)<0;1,0> 0xffffffff:ud                      /// $21
+    add (M1, 1) V247(0,3)<1> V233(0,0)<0;1,0> V243(0,0)<0;1,0>                   /// $22
+    shl (M1, 1) V248(0,0)<1> V249(0,0)<0;1,0> 0x2:d                              /// $23
+    add (M1, 1) V250(0,4)<1> V248(0,0)<0;1,0> 0xffffffff:d                       /// $24
+    shl (M1, 1) V250(0,5)<1> V232(0,0)<0;1,0> 0x3:d                              /// $25
+    add (M1, 1) V247(0,6)<1> V233(0,0)<0;1,0> V243(0,0)<0;1,0>                   /// $26
+    mov (M1, 16) V61(0,0)<1> V60(0,0)<1;1,0>                                     /// $27
+    add (M1, 1) V251(0,5)<1> V250(0,5)<0;1,0> 0x1:d                              /// $28
+    mov (M1, 16) V62(0,0)<1> V60(0,0)<1;1,0>                                     /// $29
+    add (M1, 1) V252(0,5)<1> V250(0,5)<0;1,0> 0x2:d                              /// $30
+    mov (M1, 16) V63(0,0)<1> V60(0,0)<1;1,0>                                     /// $31
+    add (M1, 1) V253(0,5)<1> V250(0,5)<0;1,0> 0x3:d                              /// $32
+    mov (M1, 16) V64(0,0)<1> V60(0,0)<1;1,0>                                     /// $33
+    add (M1, 1) V254(0,5)<1> V250(0,5)<0;1,0> 0x4:d                              /// $34
+    mov (M1, 16) V65(0,0)<1> V60(0,0)<1;1,0>                                     /// $35
+    add (M1, 1) V255(0,5)<1> V250(0,5)<0;1,0> 0x5:d                              /// $36
+    mov (M1, 16) V66(0,0)<1> V60(0,0)<1;1,0>                                     /// $37
+    add (M1, 1) V256(0,5)<1> V250(0,5)<0;1,0> 0x6:d                              /// $38
+    mov (M1, 16) V67(0,0)<1> V60(0,0)<1;1,0>                                     /// $39
+    add (M1, 1) V257(0,5)<1> V250(0,5)<0;1,0> 0x7:d                              /// $40
+    mov (M1, 1) V57(0,0)<1> 0xff800000:f                                         /// $41
+    mov (M1, 32) V86(0,0)<1> V57(0,0)<0;1,0>                                     /// $42
+    mov (M1, 1) V121(0,0)<1> 0x0:d                                               /// $43
+    cmp.gt (M1, 1) P1 V239(0,0)<0;1,0> V258(0,0)<0;1,0>                          /// $44
+    (P1) jmp (M1, 1) BB_1                                                        /// $45
+    mov (M1, 1) V87(0,0)<1> 0xff800000:f                                         /// $46
+    mov (M1, 1) V85(0,0)<1> V121(0,0)<0;1,0>                                     /// $47
+    jmp (M1, 1) BB_2                                                             /// $48
+
+BB_1:
+    mov (M1, 1) V58(0,0)<1> V140(0,0)<0;1,0>                                     /// $50
+    mov (M1, 1) V59(0,0)<1> V121(0,0)<0;1,0>                                     /// $51
+
+BB_3:
+    mov (M1, 1) V60(0,7)<1> 0x0:d                                                /// $53
+    mov (M1, 1) V61(0,7)<1> 0x0:d                                                /// $54
+    mov (M1, 1) V62(0,7)<1> 0x0:d                                                /// $55
+    mov (M1, 1) V63(0,7)<1> 0x0:d                                                /// $56
+    mov (M1, 1) V64(0,7)<1> 0x0:d                                                /// $57
+    mov (M1, 1) V65(0,7)<1> 0x0:d                                                /// $58
+    mov (M1, 1) V66(0,7)<1> 0x0:d                                                /// $59
+    mov (M1, 1) V67(0,7)<1> 0x0:d                                                /// $60
+    lifetime.start V259                                                          /// $61
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V60.0 %null.0 V259.0         /// $62
+    lifetime.start V260                                                          /// $63
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V61.0 %null.0 V260.0         /// $64
+    lifetime.start V261                                                          /// $65
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V62.0 %null.0 V261.0         /// $66
+    lifetime.start V262                                                          /// $67
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V63.0 %null.0 V262.0         /// $68
+    lifetime.start V263                                                          /// $69
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V64.0 %null.0 V263.0         /// $70
+    lifetime.start V264                                                          /// $71
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V65.0 %null.0 V264.0         /// $72
+    lifetime.start V265                                                          /// $73
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V66.0 %null.0 V265.0         /// $74
+    lifetime.start V266                                                          /// $75
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V67.0 %null.0 V266.0         /// $76
+    add (M1, 1) V250(0,5)<1> V250(0,5)<0;1,0> 0x40:d                             /// $77
+    add (M1, 1) V251(0,5)<1> V251(0,5)<0;1,0> 0x40:d                             /// $78
+    add (M1, 1) V252(0,5)<1> V252(0,5)<0;1,0> 0x40:d                             /// $79
+    add (M1, 1) V253(0,5)<1> V253(0,5)<0;1,0> 0x40:d                             /// $80
+    add (M1, 1) V254(0,5)<1> V254(0,5)<0;1,0> 0x40:d                             /// $81
+    add (M1, 1) V255(0,5)<1> V255(0,5)<0;1,0> 0x40:d                             /// $82
+    add (M1, 1) V256(0,5)<1> V256(0,5)<0;1,0> 0x40:d                             /// $83
+    add (M1, 1) V257(0,5)<1> V257(0,5)<0;1,0> 0x40:d                             /// $84
+    mov (M1, 1) V75(0,1)<1> V68(0,0)<0;1,0>                                      /// $85
+    mov (M1, 1) V75(0,2)<1> V69(0,0)<0;1,0>                                      /// $86
+    mov (M1, 1) V75(0,3)<1> V70(0,0)<0;1,0>                                      /// $87
+    mov (M1, 1) V75(0,4)<1> V71(0,0)<0;1,0>                                      /// $88
+    mov (M1, 1) V75(0,5)<1> V72(0,0)<0;1,0>                                      /// $89
+    mov (M1, 1) V75(0,6)<1> V73(0,0)<0;1,0>                                      /// $90
+    mov (M1, 1) V75(0,7)<1> V74(0,0)<0;1,0>                                      /// $91
+    shl (M1, 1) V267(0,0)<1> V268(0,0)<0;1,0> 0x5:w                              /// $92
+    addr_add (M1, 1) A0(0)<1> &V86 V269(0,0)<0;1,0>                              /// $93
+    mov (M1, 8) r[A0(0),0]<1>:f V75(0,0)<1;1,0>                                  /// $94
+    add (M1, 1) V270(0,0)<1> V271(0,0)<0;1,0> 0x1:d                              /// $95
+    add (M1, 1) V272(0,0)<1> V239(0,0)<0;1,0> (-)V273(0,0)<0;1,0>                /// $96
+    cmp.lt (M1, 1) P2 V272(0,0)<0;1,0> 0x8:ud                                    /// $97
+    (!P2) jmp (M1, 1) BB_4                                                       /// $98
+    mov (M1, 8) V78(0,0)<1> 0x87654321:uv                                        /// $99
+    cmp.lt (M1, 8) P3 V272(0,0)<0;1,0> V274(0,0)<1;1,0>                          /// $100
+    (P3) mov (M1, 8) r[A0(0),0]<1>:f 0xff800000:f                                /// $101
+
+BB_4:
+    add (M1, 1) V273(0,0)<1> V273(0,0)<0;1,0> 0x40:ud                            /// $103
+    cmp.gt (M1, 1) P4 V239(0,0)<0;1,0> V273(0,0)<0;1,0>                          /// $104
+    (P4) jmp (M1, 1) BB_5                                                        /// $105
+    mov (M1, 8) V82(0,0)<1> V86(0,0)<1;1,0>                                      /// $106
+    cmp.eq (M1, 1) P5 V271(0,0)<0;1,0> 0x0:d                                     /// $107
+    (P5) jmp (M1, 1) BB_6                                                        /// $108
+    jmp (M1, 1) BB_7                                                             /// $109
+
+BB_5:
+    mov (M1, 1) V59(0,0)<1> V85(0,0)<0;1,0>                                      /// $111
+    jmp (M1, 1) BB_3                                                             /// $112
+
+BB_7:
+    mov (M1, 1) V79(0,0)<1> 0x1:d                                                /// $114
+
+BB_8:
+    shl (M1, 1) V275(0,0)<1> V276(0,0)<0;1,0> 0x5:w                              /// $116
+    addr_add (M1, 1) A1(0)<1> &V86 V277(0,0)<0;1,0>                              /// $117
+    max (M1, 8) V82(0,0)<1> V82(0,0)<1;1,0> r[A1(0),0]<1;1,0>:f                  /// $118
+    add (M1, 1) V278(0,0)<1> V279(0,0)<0;1,0> 0x1:d                              /// $119
+    cmp.eq (M1, 1) P6 V279(0,0)<0;1,0> V271(0,0)<0;1,0>                          /// $120
+    (P6) jmp (M1, 1) BB_6                                                        /// $121
+    mov (M1, 1) V79(0,0)<1> V81(0,0)<0;1,0>                                      /// $122
+    jmp (M1, 1) BB_8                                                             /// $123
+
+BB_6:
+    max (M1, 4) V83(0,0)<1> V82(0,0)<1;1,0> V82(0,4)<1;1,0>                      /// $125
+    max (M1, 2) V84(0,0)<1> V83(0,0)<1;1,0> V83(0,2)<1;1,0>                      /// $126
+    max (M1, 1) V87(0,0)<1> V84(0,0)<0;1,0> V84(0,1)<0;1,0>                      /// $127
+
+BB_2:
+    shl (M1, 1) V280(0,0)<1> V232(0,0)<0;1,0> 0x2:d                              /// $129
+    lsc_store.slm (M1, 1)  flat[V281]:a32  V87:d32                               /// $130
+    lsc_fence.slm.none.group                                                     /// $131
+    mov (M1, 1) V89(0,0)<1> 0x8080000:d                                          /// $132
+    mov (M1, 16) V90(0,0)<1> V89(0,0)<0;1,0>                                     /// $133
+    raw_sends.3.1.0.0 (M1, 1)  0x3:ud 0x2000004:ud V90.0 %null.0 %null.0         /// $134
+    nbarrier.wait 0x0:b                                                          /// $135
+    mov (M1, 1) V91(0,0)<1> 0x0:d                                                /// $136
+    lsc_load.slm (M1, 1)  V282:d64x4t  flat[V283]:a32                            /// $137
+    max (M1, 4) V93(0,0)<1> V92(0,0)<1;1,0> V92(0,4)<1;1,0>                      /// $138
+    max (M1, 2) V94(0,0)<1> V93(0,0)<1;1,0> V93(0,2)<1;1,0>                      /// $139
+    mov (M1, 1) V95(0,0)<1> 0x8080000:d                                          /// $140
+    mov (M1, 16) V96(0,0)<1> V95(0,0)<0;1,0>                                     /// $141
+    raw_sends.3.1.0.0 (M1, 1)  0x3:ud 0x2000004:ud V96.0 %null.0 %null.0         /// $142
+    mov (M1, 1) V285(0,0)<1> V284(0,0)<0;1,0>                                    /// $143
+    add (M1, 1) V286(0,2)<1> V246(0,0)<0;1,0> 0xffffffff:ud                      /// $144
+    mov (M1, 1) V101(0,3)<1> V53(0,0)<0;1,0>                                     /// $145
+    add (M1, 1) V287(0,4)<1> V248(0,0)<0;1,0> 0xffffffff:d                       /// $146
+    mov (M1, 1) V101(0,5)<1> V140(0,0)<0;1,0>                                    /// $147
+    mov (M1, 1) V101(0,6)<1> V53(0,0)<0;1,0>                                     /// $148
+    mov (M1, 16) V102(0,0)<1> V101(0,0)<1;1,0>                                   /// $149
+    add (M1, 1) V288(0,5)<1> V287(0,5)<0;1,0> 0x1:d                              /// $150
+    mov (M1, 16) V103(0,0)<1> V101(0,0)<1;1,0>                                   /// $151
+    add (M1, 1) V289(0,5)<1> V287(0,5)<0;1,0> 0x2:d                              /// $152
+    mov (M1, 16) V104(0,0)<1> V101(0,0)<1;1,0>                                   /// $153
+    add (M1, 1) V290(0,5)<1> V287(0,5)<0;1,0> 0x3:d                              /// $154
+    mov (M1, 16) V105(0,0)<1> V101(0,0)<1;1,0>                                   /// $155
+    add (M1, 1) V291(0,5)<1> V287(0,5)<0;1,0> 0x4:d                              /// $156
+    mov (M1, 16) V106(0,0)<1> V101(0,0)<1;1,0>                                   /// $157
+    add (M1, 1) V292(0,5)<1> V287(0,5)<0;1,0> 0x5:d                              /// $158
+    mov (M1, 16) V107(0,0)<1> V101(0,0)<1;1,0>                                   /// $159
+    add (M1, 1) V293(0,5)<1> V287(0,5)<0;1,0> 0x6:d                              /// $160
+    mov (M1, 16) V108(0,0)<1> V101(0,0)<1;1,0>                                   /// $161
+    add (M1, 1) V294(0,5)<1> V287(0,5)<0;1,0> 0x7:d                              /// $162
+    max (M1, 1) V98(0,0)<1> V94(0,0)<0;1,0> V94(0,1)<0;1,0>                      /// $163
+    mov (M1, 1) V99(0,0)<1> 0x0:f                                                /// $164
+    mov (M1, 32) V142(0,0)<1> V99(0,0)<0;1,0>                                    /// $165
+    (P1) jmp (M1, 1) BB_9                                                        /// $166
+    mov (M1, 8) V120(0,0)<1> V98(0,0)<0;1,0>                                     /// $167
+    cmp.eq (M1, 1) P7 V270(0,0)<0;1,0> 0x0:d                                     /// $168
+    (P7) jmp (M1, 1) BB_10                                                       /// $169
+    mov (M1, 1) V121(0,0)<1> V85(0,0)<0;1,0>                                     /// $170
+    jmp (M1, 1) BB_11                                                            /// $171
+
+BB_10:
+    nbarrier.wait 0x0:b                                                          /// $173
+    mov (M1, 1) V130(0,0)<1> 0x0:f                                               /// $174
+    jmp (M1, 1) BB_12                                                            /// $175
+
+BB_9:
+    mov (M1, 1) V100(0,0)<1> V140(0,0)<0;1,0>                                    /// $177
+
+BB_13:
+    mov (M1, 1) V101(0,7)<1> 0x0:d                                               /// $179
+    mov (M1, 1) V102(0,7)<1> 0x0:d                                               /// $180
+    mov (M1, 1) V103(0,7)<1> 0x0:d                                               /// $181
+    mov (M1, 1) V104(0,7)<1> 0x0:d                                               /// $182
+    mov (M1, 1) V105(0,7)<1> 0x0:d                                               /// $183
+    mov (M1, 1) V106(0,7)<1> 0x0:d                                               /// $184
+    mov (M1, 1) V107(0,7)<1> 0x0:d                                               /// $185
+    mov (M1, 1) V108(0,7)<1> 0x0:d                                               /// $186
+    lifetime.start V295                                                          /// $187
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V101.0 %null.0 V295.0        /// $188
+    lifetime.start V296                                                          /// $189
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V102.0 %null.0 V296.0        /// $190
+    lifetime.start V297                                                          /// $191
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V103.0 %null.0 V297.0        /// $192
+    lifetime.start V298                                                          /// $193
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V104.0 %null.0 V298.0        /// $194
+    lifetime.start V299                                                          /// $195
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V105.0 %null.0 V299.0        /// $196
+    lifetime.start V300                                                          /// $197
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V106.0 %null.0 V300.0        /// $198
+    lifetime.start V301                                                          /// $199
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V107.0 %null.0 V301.0        /// $200
+    lifetime.start V302                                                          /// $201
+    raw_sends.15.1.0.1 (M1, 1)  0x0:ud 0x2180403:ud V108.0 %null.0 V302.0        /// $202
+    add (M1, 1) V287(0,5)<1> V287(0,5)<0;1,0> 0x40:d                             /// $203
+    add (M1, 1) V288(0,5)<1> V288(0,5)<0;1,0> 0x40:d                             /// $204
+    add (M1, 1) V289(0,5)<1> V289(0,5)<0;1,0> 0x40:d                             /// $205
+    add (M1, 1) V290(0,5)<1> V290(0,5)<0;1,0> 0x40:d                             /// $206
+    add (M1, 1) V291(0,5)<1> V291(0,5)<0;1,0> 0x40:d                             /// $207
+    add (M1, 1) V292(0,5)<1> V292(0,5)<0;1,0> 0x40:d                             /// $208
+    add (M1, 1) V293(0,5)<1> V293(0,5)<0;1,0> 0x40:d                             /// $209
+    add (M1, 1) V294(0,5)<1> V294(0,5)<0;1,0> 0x40:d                             /// $210
+    mov (M1, 1) V116(0,1)<1> V109(0,0)<0;1,0>                                    /// $211
+    mov (M1, 1) V116(0,2)<1> V110(0,0)<0;1,0>                                    /// $212
+    mov (M1, 1) V116(0,3)<1> V111(0,0)<0;1,0>                                    /// $213
+    mov (M1, 1) V116(0,4)<1> V112(0,0)<0;1,0>                                    /// $214
+    mov (M1, 1) V116(0,5)<1> V113(0,0)<0;1,0>                                    /// $215
+    mov (M1, 1) V116(0,6)<1> V114(0,0)<0;1,0>                                    /// $216
+    mov (M1, 1) V116(0,7)<1> V115(0,0)<0;1,0>                                    /// $217
+    shl (M1, 1) V303(0,0)<1> V304(0,0)<0;1,0> 0x5:w                              /// $218
+    addr_add (M1, 1) A2(0)<1> &V142 V305(0,0)<0;1,0>                             /// $219
+    mov (M1, 8) r[A2(0),0]<1>:f V116(0,0)<1;1,0>                                 /// $220
+    add (M1, 1) V306(0,0)<1> V306(0,0)<0;1,0> 0x1:d                              /// $221
+    add (M1, 1) V307(0,0)<1> V239(0,0)<0;1,0> (-)V308(0,0)<0;1,0>                /// $222
+    cmp.lt (M1, 1) P8 V307(0,0)<0;1,0> 0x8:ud                                    /// $223
+    (!P8) jmp (M1, 1) BB_14                                                      /// $224
+    mov (M1, 8) V119(0,0)<1> 0x87654321:uv                                       /// $225
+    cmp.lt (M1, 8) P9 V307(0,0)<0;1,0> V309(0,0)<1;1,0>                          /// $226
+    (P9) mov (M1, 8) r[A2(0),0]<1>:f 0x0:f                                       /// $227
+
+BB_14:
+    add (M1, 1) V308(0,0)<1> V308(0,0)<0;1,0> 0x40:ud                            /// $229
+    cmp.gt (M1, 1) P10 V239(0,0)<0;1,0> V308(0,0)<0;1,0>                         /// $230
+    (P10) jmp (M1, 1) BB_13                                                      /// $231
+    mov (M1, 8) V120(0,0)<1> V98(0,0)<0;1,0>                                     /// $232
+
+BB_11:
+    mov (M1, 1) V122(0,0)<1> 0x0:d                                               /// $234
+
+BB_15:
+    shl (M1, 1) V310(0,0)<1> V311(0,0)<0;1,0> 0x5:w                              /// $236
+    addr_add (M1, 1) A3(0)<1> &V86 V312(0,0)<0;1,0>                              /// $237
+    add (M1, 8) V313(0,0)<1> r[A3(0),0]<1;1,0>:f (-)V315(0,0)<1;1,0>             /// $238
+    mul (M1, 8) V313(0,0)<1> V313(0,0)<1;1,0> 0x3fb8aa3b:f                       /// $239
+    exp (M1, 8) V124(0,0)<1> V124(0,0)<1;1,0>                                    /// $240
+    addr_add (M1, 1) A4(0)<1> &V142 V312(0,0)<0;1,0>                             /// $241
+    mul (M1, 8) r[A4(0),0]<1>:f V313(0,0)<1;1,0> r[A4(0),0]<1;1,0>:f             /// $242
+    add (M1, 1) V317(0,0)<1> V317(0,0)<0;1,0> 0x1:d                              /// $243
+    cmp.eq (M1, 1) P11 V317(0,0)<0;1,0> V306(0,0)<0;1,0>                         /// $244
+    (!P11) jmp (M1, 1) BB_15                                                     /// $245
+    nbarrier.wait 0x0:b                                                          /// $246
+    mov (M1, 8) V127(0,0)<1> V142(0,0)<1;1,0>                                    /// $247
+    cmp.eq (M1, 1) P12 V306(0,0)<0;1,0> 0x1:d                                    /// $248
+    (P12) jmp (M1, 1) BB_16                                                      /// $249
+    mov (M1, 1) V125(0,0)<1> 0x1:d                                               /// $250
+
+BB_17:
+    shl (M1, 1) V318(0,0)<1> V319(0,0)<0;1,0> 0x5:w                              /// $252
+    addr_add (M1, 1) A5(0)<1> &V142 V320(0,0)<0;1,0>                             /// $253
+    add (M1, 8) V321(0,0)<1> r[A5(0),0]<1;1,0>:f V321(0,0)<1;1,0>                /// $254
+    add (M1, 1) V322(0,0)<1> V322(0,0)<0;1,0> 0x1:d                              /// $255
+    cmp.eq (M1, 1) P13 V322(0,0)<0;1,0> V306(0,0)<0;1,0>                         /// $256
+    (!P13) jmp (M1, 1) BB_17                                                     /// $257
+
+BB_16:
+    add (M1, 4) V323(0,0)<1> V321(0,4)<1;1,0> V321(0,0)<1;1,0>                   /// $259
+    add (M1, 2) V324(0,0)<1> V323(0,2)<1;1,0> V323(0,0)<1;1,0>                   /// $260
+    add (M1, 1) V325(0,0)<1> V324(0,1)<0;1,0> V324(0,0)<0;1,0>                   /// $261
+
+BB_12:
+    lsc_store.slm (M1, 1)  flat[V281]:a32  V130:d32                              /// $263
+    lsc_fence.slm.none.group                                                     /// $264
+    mov (M1, 1) V131(0,0)<1> 0x8080000:d                                         /// $265
+    mov (M1, 16) V132(0,0)<1> V131(0,0)<0;1,0>                                   /// $266
+    raw_sends.3.1.0.0 (M1, 1)  0x3:ud 0x2000004:ud V132.0 %null.0 %null.0        /// $267
+    nbarrier.wait 0x0:b                                                          /// $268
+    mov (M1, 1) V133(0,0)<1> 0x0:d                                               /// $269
+    lsc_load.slm (M1, 1)  V326:d64x4t  flat[V327]:a32                            /// $270
+    add (M1, 4) V328(0,0)<1> V329(0,4)<1;1,0> V329(0,0)<1;1,0>                   /// $271
+    add (M1, 2) V330(0,0)<1> V328(0,2)<1;1,0> V328(0,0)<1;1,0>                   /// $272
+    add (M1, 1) V331(0,0)<1> V330(0,1)<0;1,0> V330(0,0)<0;1,0>                   /// $273
+    inv (M1, 1) V138(0,0)<1> V138(0,0)<0;1,0>                                    /// $274
+    mul (M1, 1) V332(0,0)<1> V333(0,0)<0;1,0> V249(0,0)<0;1,0>                   /// $275
+    (P1) jmp (M1, 1) BB_18                                                       /// $276
+    mov (M1, 32) V192(0,0)<1> 0x0:d                                              /// $277
+    mov (M1, 32) V192(2,0)<1> 0x0:d                                              /// $278
+    mov (M1, 32) V192(4,0)<1> 0x0:d                                              /// $279
+    mov (M1, 32) V192(6,0)<1> 0x0:d                                              /// $280
+    jmp (M1, 1) BB_19                                                            /// $281
+
+BB_18:
+    add (M1, 1) V334(0,0)<1> V332(0,0)<0;1,0> 0xffffffff:d                       /// $283
+    add (M1, 1) V334(0,0)<1> V334(0,0)<0;1,0> V238(0,0)<0;1,0>                   /// $284
+    mov (M1, 1) V141(0,0)<1> 0x0:d                                               /// $285
+    mov (M1, 32) V335(0,0)<1> 0x0:f                                              /// $286
+    mov (M1, 32) V335(2,0)<1> 0x0:f                                              /// $287
+    mov (M1, 32) V335(4,0)<1> 0x0:f                                              /// $288
+    mov (M1, 32) V335(6,0)<1> 0x0:f                                              /// $289
+
+BB_20:
+    mov (M1, 1) V337(0,0)<1> V336(0,0)<0;1,0>                                    /// $291
+    mov (M1, 1) V144(0,2)<1> 0xff:d                                              /// $292
+    mov (M1, 1) V144(0,3)<1> V139(0,0)<0;1,0>                                    /// $293
+    mov (M1, 1) V144(0,4)<1> 0xff:d                                              /// $294
+    mov (M1, 1) V144(0,5)<1> 0x0:d                                               /// $295
+    add (M1, 1) V338(0,6)<1> V240(0,0)<0;1,0> V332(0,0)<0;1,0>                   /// $296
+    mov (M1, 16) V148(0,0)<1> V144(0,0)<1;1,0>                                   /// $297
+    add (M1, 1) V339(0,5)<1> V338(0,5)<0;1,0> 0x8:d                              /// $298
+    mov (M1, 1) V340(0,0)<1> V336(0,0)<0;1,0>                                    /// $299
+    mov (M1, 1) V143(0,2)<1> 0xff:d                                              /// $300
+    mov (M1, 1) V143(0,3)<1> V139(0,0)<0;1,0>                                    /// $301
+    mov (M1, 1) V143(0,4)<1> 0xff:d                                              /// $302
+    mov (M1, 1) V143(0,5)<1> 0x0:d                                               /// $303
+    add (M1, 1) V341(0,6)<1> V240(0,0)<0;1,0> V332(0,0)<0;1,0>                   /// $304
+    mov (M1, 16) V149(0,0)<1> V143(0,0)<1;1,0>                                   /// $305
+    mov (M1, 1) V149(0,7)<1> 0x71f:d                                             /// $306
+    raw_sends.15.1.0.0 (M1, 1)  0x0:ud 0x2080203:ud V149.0 %null.0 %null.0       /// $307
+    add (M1, 1) V342(0,5)<1> V342(0,5)<0;1,0> 0x20:d                             /// $308
+    raw_sends.15.1.0.0 (M1, 1)  0x0:ud 0x2080203:ud V149.0 %null.0 %null.0       /// $309
+    add (M1, 1) V342(0,5)<1> V342(0,5)<0;1,0> 0x20:d                             /// $310
+    raw_sends.15.1.0.0 (M1, 1)  0x0:ud 0x2080203:ud V149.0 %null.0 %null.0       /// $311
+    add (M1, 1) V342(0,5)<1> V342(0,5)<0;1,0> 0x20:d                             /// $312
+    shl (M1, 1) V343(0,0)<1> V344(0,0)<0;1,0> 0x5:w                              /// $313
+    addr_add (M1, 1) A6(0)<1> &V142 V345(0,0)<0;1,0>                             /// $314
+    mul (M1, 8) r[A6(0),0]<1>:f r[A6(0),0]<1;1,0>:f V331(0,0)<0;1,0>             /// $315
+    mov (M1, 1) V146(0,0)<1> 0x0:d                                               /// $316
+    mov (M1, 16) V147(0,0)<1> V144(0,0)<1;1,0>                                   /// $317
+
+BB_21:
+    mov (M1, 1) V147(0,7)<1> 0x707:d                                             /// $319
+    lifetime.start V346                                                          /// $320
+    raw_sends.15.1.0.4 (M1, 1)  0x0:ud 0x2488403:ud V147.0 %null.0 V346.0        /// $321
+    mov (M1, 1) V148(0,7)<1> 0x707:d                                             /// $322
+    lifetime.start V347                                                          /// $323
+    raw_sends.15.1.0.4 (M1, 1)  0x0:ud 0x2488403:ud V148.0 %null.0 V347.0        /// $324
+    lifetime.start V152                                                          /// $325
+    mov (M1, 8) V152(0,0)<1> V150(0,0)<2;1,0>                                    /// $326
+    mov (M1, 8) V152(0,16)<1> V150(0,16)<2;1,0>                                  /// $327
+    lifetime.start V153                                                          /// $328
+    mov (M1, 8) V153(0,0)<1> V150(1,0)<2;1,0>                                    /// $329
+    mov (M1, 8) V153(0,16)<1> V150(1,16)<2;1,0>                                  /// $330
+    lifetime.start V154                                                          /// $331
+    mov (M1, 8) V154(0,0)<1> V150(2,0)<2;1,0>                                    /// $332
+    mov (M1, 8) V154(0,16)<1> V150(2,16)<2;1,0>                                  /// $333
+    lifetime.start V155                                                          /// $334
+    mov (M1, 8) V155(0,0)<1> V150(3,0)<2;1,0>                                    /// $335
+    mov (M1, 8) V155(0,16)<1> V150(3,16)<2;1,0>                                  /// $336
+    mov (M1, 8) V152(0,8)<1> V150(0,1)<2;1,0>                                    /// $337
+    mov (M1, 8) V152(0,24)<1> V150(0,17)<2;1,0>                                  /// $338
+    mov (M1, 8) V153(0,8)<1> V150(1,1)<2;1,0>                                    /// $339
+    mov (M1, 8) V153(0,24)<1> V150(1,17)<2;1,0>                                  /// $340
+    mov (M1, 8) V154(0,8)<1> V150(2,1)<2;1,0>                                    /// $341
+    mov (M1, 8) V154(0,24)<1> V150(2,17)<2;1,0>                                  /// $342
+    mov (M1, 8) V155(0,8)<1> V150(3,1)<2;1,0>                                    /// $343
+    mov (M1, 8) V155(0,24)<1> V150(3,17)<2;1,0>                                  /// $344
+    lifetime.start V156                                                          /// $345
+    mov (M1, 8) V156(0,0)<1> V151(0,0)<2;1,0>                                    /// $346
+    mov (M1, 8) V156(0,16)<1> V151(0,16)<2;1,0>                                  /// $347
+    lifetime.start V157                                                          /// $348
+    mov (M1, 8) V157(0,0)<1> V151(1,0)<2;1,0>                                    /// $349
+    mov (M1, 8) V157(0,16)<1> V151(1,16)<2;1,0>                                  /// $350
+    lifetime.start V158                                                          /// $351
+    mov (M1, 8) V158(0,0)<1> V151(2,0)<2;1,0>                                    /// $352
+    mov (M1, 8) V158(0,16)<1> V151(2,16)<2;1,0>                                  /// $353
+    lifetime.start V159                                                          /// $354
+    mov (M1, 8) V159(0,0)<1> V151(3,0)<2;1,0>                                    /// $355
+    mov (M1, 8) V159(0,16)<1> V151(3,16)<2;1,0>                                  /// $356
+    raw_sends.15.1.0.0 (M1, 1)  0x0:ud 0x2080203:ud V149.0 %null.0 %null.0       /// $357
+    add (M1, 1) V348(0,5)<1> V348(0,5)<0;1,0> 0x10:d                             /// $358
+    mov (M1, 8) V156(0,8)<1> V151(0,1)<2;1,0>                                    /// $359
+    mov (M1, 8) V156(0,24)<1> V151(0,17)<2;1,0>                                  /// $360
+    mov (M1, 8) V157(0,8)<1> V151(1,1)<2;1,0>                                    /// $361
+    mov (M1, 8) V157(0,24)<1> V151(1,17)<2;1,0>                                  /// $362
+    mov (M1, 8) V158(0,8)<1> V151(2,1)<2;1,0>                                    /// $363
+    mov (M1, 8) V158(0,24)<1> V151(2,17)<2;1,0>                                  /// $364
+    mov (M1, 8) V159(0,8)<1> V151(3,1)<2;1,0>                                    /// $365
+    mov (M1, 8) V159(0,24)<1> V151(3,17)<2;1,0>                                  /// $366
+    mov (M1, 8) V160(0,0)<1> V152(0,0)<1;1,0>                                    /// $367
+    mov (M1, 8) V160(0,8)<1> V152(0,8)<1;1,0>                                    /// $368
+    mov (M1, 8) V161(0,0)<1> V152(0,16)<1;1,0>                                   /// $369
+    mov (M1, 8) V161(0,8)<1> V152(0,24)<1;1,0>                                   /// $370
+    mov (M1, 8) V162(0,0)<1> V153(0,0)<1;1,0>                                    /// $371
+    mov (M1, 8) V162(0,8)<1> V153(0,8)<1;1,0>                                    /// $372
+    mov (M1, 8) V163(0,0)<1> V153(0,16)<1;1,0>                                   /// $373
+    mov (M1, 8) V163(0,8)<1> V153(0,24)<1;1,0>                                   /// $374
+    mov (M1, 8) V164(0,0)<1> V154(0,0)<1;1,0>                                    /// $375
+    mov (M1, 8) V164(0,8)<1> V154(0,8)<1;1,0>                                    /// $376
+    mov (M1, 8) V165(0,0)<1> V154(0,16)<1;1,0>                                   /// $377
+    mov (M1, 8) V165(0,8)<1> V154(0,24)<1;1,0>                                   /// $378
+    mov (M1, 8) V166(0,0)<1> V155(0,0)<1;1,0>                                    /// $379
+    mov (M1, 8) V166(0,8)<1> V155(0,8)<1;1,0>                                    /// $380
+    mov (M1, 8) V167(0,0)<1> V155(0,16)<1;1,0>                                   /// $381
+    mov (M1, 8) V167(0,8)<1> V155(0,24)<1;1,0>                                   /// $382
+    mov (M1, 8) V168(0,0)<1> V156(0,0)<1;1,0>                                    /// $383
+    mov (M1, 8) V168(0,8)<1> V156(0,8)<1;1,0>                                    /// $384
+    mov (M1, 8) V169(0,0)<1> V156(0,16)<1;1,0>                                   /// $385
+    mov (M1, 8) V169(0,8)<1> V156(0,24)<1;1,0>                                   /// $386
+    mov (M1, 8) V170(0,0)<1> V157(0,0)<1;1,0>                                    /// $387
+    mov (M1, 8) V170(0,8)<1> V157(0,8)<1;1,0>                                    /// $388
+    mov (M1, 8) V171(0,0)<1> V157(0,16)<1;1,0>                                   /// $389
+    mov (M1, 8) V171(0,8)<1> V157(0,24)<1;1,0>                                   /// $390
+    mov (M1, 8) V172(0,0)<1> V158(0,0)<1;1,0>                                    /// $391
+    mov (M1, 8) V172(0,8)<1> V158(0,8)<1;1,0>                                    /// $392
+    mov (M1, 8) V173(0,0)<1> V158(0,16)<1;1,0>                                   /// $393
+    mov (M1, 8) V173(0,8)<1> V158(0,24)<1;1,0>                                   /// $394
+    mov (M1, 8) V174(0,0)<1> V159(0,0)<1;1,0>                                    /// $395
+    mov (M1, 8) V174(0,8)<1> V159(0,8)<1;1,0>                                    /// $396
+    mov (M1, 8) V175(0,0)<1> V159(0,16)<1;1,0>                                   /// $397
+    mov (M1, 8) V175(0,8)<1> V159(0,24)<1;1,0>                                   /// $398
+    add (M1, 1) V339(0,5)<1> V339(0,5)<0;1,0> 0x10:d                             /// $399
+    mul (M1, 8) V349(0,0)<1> V350(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $400
+    mul (M1, 8) V349(0,8)<1> V350(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $401
+    mul (M1, 8) V349(1,0)<1> V351(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $402
+    mul (M1, 8) V349(1,8)<1> V351(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $403
+    mul (M1, 8) V352(0,0)<1> V353(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $404
+    mul (M1, 8) V352(0,8)<1> V353(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $405
+    mul (M1, 8) V352(1,0)<1> V354(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $406
+    mul (M1, 8) V352(1,8)<1> V354(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $407
+    mul (M1, 8) V355(0,0)<1> V356(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $408
+    mul (M1, 8) V355(0,8)<1> V356(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $409
+    mul (M1, 8) V355(1,0)<1> V357(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $410
+    mul (M1, 8) V355(1,8)<1> V357(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $411
+    mul (M1, 8) V358(0,0)<1> V359(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $412
+    mul (M1, 8) V358(0,8)<1> V359(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $413
+    mul (M1, 8) V358(1,0)<1> V360(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $414
+    mul (M1, 8) V358(1,8)<1> V360(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $415
+    mul (M1, 8) V361(0,0)<1> V362(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $416
+    mul (M1, 8) V361(0,8)<1> V362(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $417
+    mul (M1, 8) V361(1,0)<1> V363(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $418
+    mul (M1, 8) V361(1,8)<1> V363(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $419
+    mul (M1, 8) V364(0,0)<1> V365(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $420
+    mul (M1, 8) V364(0,8)<1> V365(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $421
+    mul (M1, 8) V364(1,0)<1> V366(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $422
+    mul (M1, 8) V364(1,8)<1> V366(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $423
+    mul (M1, 8) V367(0,0)<1> V368(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $424
+    mul (M1, 8) V367(0,8)<1> V368(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $425
+    mul (M1, 8) V367(1,0)<1> V369(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $426
+    mul (M1, 8) V367(1,8)<1> V369(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $427
+    mul (M1, 8) V370(0,0)<1> V371(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $428
+    mul (M1, 8) V370(0,8)<1> V371(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $429
+    mul (M1, 8) V370(1,0)<1> V372(0,0)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $430
+    mul (M1, 8) V370(1,8)<1> V372(0,8)<1;1,0> r[A6(0),0]<1;1,0>:f                /// $431
+    add (M1, 1) V342(0,5)<1> V342(0,5)<0;1,0> 0x20:d                             /// $432
+    shl (M1, 1) V373(0,0)<1> V374(0,0)<0;1,0> 0x7:w                              /// $433
+    add (M1, 16) V375(0,0)<1> V349(0,4)<8;4,1> V349(0,0)<8;4,1>                  /// $434
+    add (M1, 16) V375(1,0)<1> V352(0,4)<8;4,1> V352(0,0)<8;4,1>                  /// $435
+    add (M1, 16) V376(0,0)<1> V355(0,4)<8;4,1> V355(0,0)<8;4,1>                  /// $436
+    add (M1, 16) V376(1,0)<1> V358(0,4)<8;4,1> V358(0,0)<8;4,1>                  /// $437
+    add (M1, 16) V377(0,0)<1> V361(0,4)<8;4,1> V361(0,0)<8;4,1>                  /// $438
+    add (M1, 16) V377(1,0)<1> V364(0,4)<8;4,1> V364(0,0)<8;4,1>                  /// $439
+    add (M1, 16) V378(0,0)<1> V367(0,4)<8;4,1> V367(0,0)<8;4,1>                  /// $440
+    add (M1, 16) V378(1,0)<1> V370(0,4)<8;4,1> V370(0,0)<8;4,1>                  /// $441
+    add (M1, 16) V379(0,0)<1> V375(0,2)<4;2,1> V375(0,0)<4;2,1>                  /// $442
+    add (M1, 16) V379(1,0)<1> V376(0,2)<4;2,1> V376(0,0)<4;2,1>                  /// $443
+    add (M1, 16) V380(0,0)<1> V377(0,2)<4;2,1> V377(0,0)<4;2,1>                  /// $444
+    add (M1, 16) V380(1,0)<1> V378(0,2)<4;2,1> V378(0,0)<4;2,1>                  /// $445
+    add (M1, 16) V381(0,0)<1> V379(0,1)<2;1,0> V379(0,0)<2;1,0>                  /// $446
+    add (M1, 16) V381(1,0)<1> V380(0,1)<2;1,0> V380(0,0)<2;1,0>                  /// $447
+    addr_add (M1, 1) A7(0)<1> &V335 V382(0,0)<0;1,0>                             /// $448
+    add (M1, 32) r[A7(0),0]<1>:f V381(0,0)<1;1,0> r[A7(0),0]<1;1,0>:f            /// $449
+    add (M1, 1) V384(0,0)<1> V384(0,0)<0;1,0> 0x1:d                              /// $450
+    cmp.eq (M1, 1) P14 V384(0,0)<0;1,0> 0x4:d                                    /// $451
+    (!P14) jmp (M1, 1) BB_21                                                     /// $452
+    add (M1, 1) V240(0,0)<1> V240(0,0)<0;1,0> 0x40:d                             /// $453
+    add (M1, 1) V385(0,0)<1> V385(0,0)<0;1,0> 0x1:d                              /// $454
+    cmp.lt (M1, 1) P15 V258(0,0)<0;1,0> V239(0,0)<0;1,0>                         /// $455
+    (P15) jmp (M1, 1) BB_20                                                      /// $456
+
+BB_19:
+    shl (M1, 1) V386(0,0)<1> V232(0,0)<0;1,0> 0x9:d                              /// $458
+    or (M1, 1) V386(0,0)<1> V386(0,0)<0;1,0> 0x20:d                              /// $459
+    mov (M1, 8) V194(0,0)<1> 0x76543210:v                                        /// $460
+    mov (M1, 8) V195(0,0)<1> 0x76543210:v                                        /// $461
+    add (M1, 8) V387(0,8)<1> V388(0,0)<1;1,0> 0x8:d                              /// $462
+    mul (M1, 16) V387(0,0)<1> V387(0,0)<1;1,0> 0x4:d                             /// $463
+    add (M1, 16) V389(0,0)<1> V386(0,0)<0;1,0> V387(0,0)<1;1,0>                  /// $464
+    lsc_store.slm (M1, 16)  flat[V390]:a32  V192:d32                             /// $465
+    add (M1, 1) V391(0,0)<1> V386(0,0)<0;1,0> 0x40:d                             /// $466
+    add (M1, 16) V392(0,0)<1> V391(0,0)<0;1,0> V387(0,0)<1;1,0>                  /// $467
+    lsc_store.slm (M1, 16)  flat[V393]:a32  V192.64:d32                          /// $468
+    add (M1, 1) V394(0,0)<1> V386(0,0)<0;1,0> 0x80:d                             /// $469
+    add (M1, 16) V395(0,0)<1> V394(0,0)<0;1,0> V387(0,0)<1;1,0>                  /// $470
+    lsc_store.slm (M1, 16)  flat[V396]:a32  V192.128:d32                         /// $471
+    add (M1, 1) V397(0,0)<1> V386(0,0)<0;1,0> 0xc0:d                             /// $472
+    add (M1, 16) V398(0,0)<1> V397(0,0)<0;1,0> V387(0,0)<1;1,0>                  /// $473
+    lsc_store.slm (M1, 16)  flat[V399]:a32  V192.192:d32                         /// $474
+    add (M1, 1) V400(0,0)<1> V386(0,0)<0;1,0> 0x100:d                            /// $475
+    add (M1, 16) V401(0,0)<1> V400(0,0)<0;1,0> V387(0,0)<1;1,0>                  /// $476
+    lsc_store.slm (M1, 16)  flat[V402]:a32  V192.256:d32                         /// $477
+    add (M1, 1) V403(0,0)<1> V386(0,0)<0;1,0> 0x140:d                            /// $478
+    add (M1, 16) V404(0,0)<1> V403(0,0)<0;1,0> V387(0,0)<1;1,0>                  /// $479
+    lsc_store.slm (M1, 16)  flat[V405]:a32  V192.320:d32                         /// $480
+    add (M1, 1) V406(0,0)<1> V386(0,0)<0;1,0> 0x180:d                            /// $481
+    add (M1, 16) V407(0,0)<1> V406(0,0)<0;1,0> V387(0,0)<1;1,0>                  /// $482
+    lsc_store.slm (M1, 16)  flat[V408]:a32  V192.384:d32                         /// $483
+    add (M1, 1) V409(0,0)<1> V386(0,0)<0;1,0> 0x1c0:d                            /// $484
+    add (M1, 16) V410(0,0)<1> V409(0,0)<0;1,0> V387(0,0)<1;1,0>                  /// $485
+    lsc_store.slm (M1, 16)  flat[V411]:a32  V192.448:d32                         /// $486
+    lsc_fence.slm.none.group                                                     /// $487
+    mov (M1, 1) V211(0,0)<1> 0x8080000:d                                         /// $488
+    mov (M1, 16) V212(0,0)<1> V211(0,0)<0;1,0>                                   /// $489
+    raw_sends.3.1.0.0 (M1, 1)  0x3:ud 0x2000004:ud V212.0 %null.0 %null.0        /// $490
+    nbarrier.wait 0x0:b                                                          /// $491
+    shl (M1, 1) V412(0,0)<1> V232(0,0)<0;1,0> 0x4:d                              /// $492
+    cmp.lt (M1, 1) P16 V413(0,0)<0;1,0> 0x80:ud                                  /// $493
+    (!P16) jmp (M1, 1) BB_22                                                     /// $494
+    shl (M1, 1) V414(0,0)<1> V232(0,0)<0;1,0> 0x6:d                              /// $495
+    or (M1, 1) V414(0,0)<1> V414(0,0)<0;1,0> 0x20:d                              /// $496
+    mul (M1, 8) V415(0,0)<1> V388(0,0)<1;1,0> 0x8:d                              /// $497
+    add (M1, 8) V415(0,8)<1> V415(0,0)<1;1,0> 0x200:d                            /// $498
+    mov (M1, 16) V216(0,0)<1> V215(0,0)<1;1,0>                                   /// $499
+    add (M1, 16) V416(1,0)<1> V416(0,0)<1;1,0> 0x400:d                           /// $500
+    add (M1, 32) V417(0,0)<1> V414(0,0)<0;1,0> V416(0,0)<1;1,0>                  /// $501
+    lsc_load.slm (M1, 32)  V418:d64  flat[V419]:a32                              /// $502
+    add (M1, 1) V420(0,0)<1> V414(0,0)<0;1,0> 0x800:d                            /// $503
+    add (M1, 32) V421(0,0)<1> V420(0,0)<0;1,0> V416(0,0)<1;1,0>                  /// $504
+    lsc_load.slm (M1, 32)  V422:d64  flat[V423]:a32                              /// $505
+    mul (M1, 1) V424(0,0)<1> V241(0,0)<0;1,0> V425(0,0)<0;1,0>                   /// $506
+    add (M1, 16) V426(0,0)<1> V427(1,0)<1;1,0> V427(0,0)<1;1,0>                  /// $507
+    add (M1, 16) V426(0,0)<1> V426(0,0)<1;1,0> V427(2,0)<1;1,0>                  /// $508
+    add (M1, 16) V426(0,0)<1> V426(0,0)<1;1,0> V427(3,0)<1;1,0>                  /// $509
+    add (M1, 16) V426(0,0)<1> V426(0,0)<1;1,0> V428(0,0)<1;1,0>                  /// $510
+    add (M1, 16) V426(0,0)<1> V426(0,0)<1;1,0> V428(1,0)<1;1,0>                  /// $511
+    add (M1, 16) V426(0,0)<1> V426(0,0)<1;1,0> V428(2,0)<1;1,0>                  /// $512
+    add (M1, 16) V426(0,0)<1> V426(0,0)<1;1,0> V428(3,0)<1;1,0>                  /// $513
+    mov (M1, 16) V429(0,0)<1> V223(0,0)<1;1,0>                                   /// $514
+    mov (M1, 1) V431(0,0)<1> V430(0,0)<0;1,0>                                    /// $515
+    mov (M1, 1) V225(0,2)<1> 0xff:d                                              /// $516
+    add (M1, 1) V432(0,3)<1> V424(0,0)<0;1,0> 0xffffffff:ud                      /// $517
+    mov (M1, 1) V225(0,4)<1> 0xff:d                                              /// $518
+    mov (M1, 1) V225(0,5)<1> V213(0,0)<0;1,0>                                    /// $519
+    mov (M1, 1) V225(0,6)<1> V53(0,0)<0;1,0>                                     /// $520
+    mov (M1, 1) V225(0,7)<1> 0xf:d                                               /// $521
+    raw_sends.15.1.1.0 (M1, 1)  0x0:ud 0x20e0207:ud V225.0 V224.0 %null.0        /// $522
+
+BB_22:
+    ret (M1, 1)                                                                  /// $524
+
+//Platform: XE2
+//Build option: "-samplerHeaderWA -enablePreemptionR0Only -abiver 2 -printregusage -output -binary -dumpcommonisa -enableHalfLSC "
