@@ -22,8 +22,6 @@ using namespace at;
 using namespace gpu::xetla::attention;
 using namespace torch::indexing; // important for Slice, None, Ellipsis, etc.
 
-#include <iostream>
-#include <torch/torch.h>
 
 // Print a 2D tensor slice within [row_start, row_end), [col_start, col_end)
 void print_tensor_slice(const torch::Tensor &tensor, int64_t row_start,
