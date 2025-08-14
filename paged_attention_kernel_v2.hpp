@@ -1083,6 +1083,10 @@ class paged_attention_reduce {
       src_sub = ld_tile.reg;
       ctx.update_partition_num(row_i + 1);
 
+      accum_t scalar_value = src_sub.xetla_select<1, 1>(0)[0];
+      sycl::ext::oneapi::experimental::printf("head_id: %d, sg_id: %d scalar_value: %f\n",
+          ctx.head_id, ctx.sg_id, scalar_value); // Debugging output
+
       int32_t remain = ctx.num_partitions - i;
       if (remain < partition_stride) {
         xetla_mask<partition_stride> mask =

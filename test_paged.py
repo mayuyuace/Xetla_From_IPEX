@@ -3,9 +3,9 @@ import paged_attention
 print(dir(paged_attention))  # you should see 'paged_attention' in the list
 print(type(paged_attention.run))  # should be <class 'builtin_function_or_method'> or similar
 
-num_seqs = 2
-num_heads = 16
-num_kv_heads = 2
+num_seqs = 1
+num_kv_heads = 1
+num_heads = int(num_kv_heads * 8)
 block_size = 64
 head_size = 128
 context_len = 512
@@ -29,6 +29,10 @@ alibi_slopes = torch.ones((num_heads), dtype=torch.float32, device='xpu')
 block_tables = torch.zeros((num_seqs, max_blocks_per_seq), dtype=torch.int32, device='xpu')
 context_lens = torch.tensor([context_len] * num_seqs, dtype=torch.int32, device='xpu')
 
+for i in range(num_heads):
+    max_logits[0, i, 0] = i
+    exp_sums[0, i, 0] = i * 10
+
 for i in range(num_seqs):
     for j in range(max_blocks_per_seq):
         block_tables[i, j] = i * max_blocks_per_seq + j
@@ -51,3 +55,5 @@ paged_attention.run(
     alibi_slopes,
     softcat
 )
+
+print("Output:", output)
