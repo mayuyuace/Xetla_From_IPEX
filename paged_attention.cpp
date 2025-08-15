@@ -20,7 +20,7 @@ using namespace at;
 using namespace torch;
 using namespace gpu::xetla::attention;
 
-void paged_attention(
+std::vector<float> paged_attention(
     torch::Tensor& max_logits,
     torch::Tensor& exp_sums,
     torch::Tensor& tem_output,
@@ -61,7 +61,7 @@ void paged_attention(
   uint32_t max_num_partitions = max_logits.size(2);
   uint32_t max_blocks_per_seq = block_tables.size(1);
     
-  dispatch_paged_attention<T, U, arch_tag>(
+  return dispatch_paged_attention<T, U, arch_tag>(
       head_size, block_size, max_logits_ptr, exp_sums_ptr,
       reinterpret_cast<T *>(output_ptr),
       reinterpret_cast<T *>(tem_output_ptr), reinterpret_cast<T *>(query_ptr),
