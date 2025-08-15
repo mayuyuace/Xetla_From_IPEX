@@ -404,7 +404,7 @@ def test_flash_attn_kvcache(
     )
 
     if do_performance:
-        num_iters = 1000
+        num_iters = 200
         num_warm = 5
         num_kv = 50
         k_caches = list()

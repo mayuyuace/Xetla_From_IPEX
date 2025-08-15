@@ -8,7 +8,7 @@ BINDFLAGS = -DTORCH_EXTENSION_NAME=paged_attention
 TORCH_DIR = /home/baodi/workspace/pytorch/torch
 LIB_DIR := $(TORCH_DIR)/lib
 
-ESIMD_PATH = /home/baodi/intel/oneapi/compiler/2025.1/include/sycl
+ESIMD_PATH = $(CMPLR_ROOT)/include/sycl
 PYTHON_PATH = $(shell python3 -c 'import sysconfig; print(sysconfig.get_paths()["include"])')
 
 CXXOPTS_PATH = $(CURDIR)/cxxopts

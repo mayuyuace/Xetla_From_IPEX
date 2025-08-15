@@ -514,12 +514,6 @@ class paged_attention_kernel {
             key_tile_desc_t,
             msg_type::block_2d,
             arch_tag>;
-    // using key_prefetch_payload_t = 
-    //     subgroup::prefetch_payload_t<
-    //         mem_desc_t<scalar_t, k_mem_layout, mem_space::global>,
-    //         key_tile_desc_t,
-    //         1,
-    //         arch_tag>;
     
     using score_acc_tile_desc_t = subgroup::
         tile_desc_t<block_size, query_group_size, mma_sg_tile_size, query_group_size>;
@@ -560,7 +554,6 @@ class paged_attention_kernel {
       // Note, we didn't add correct boundary for context length, as we handled
       // this in following mask
       const int block_id = ctx.block_table[bid];
-      // sycl::ext::oneapi::experimental::printf("block_id: %d\n", block_id); 
       
       int32_t start_y = block_id * block_size;
       uint32_t boundary_y = start_y + block_size;
@@ -570,24 +563,15 @@ class paged_attention_kernel {
       auto* cur_key_cache = args.key_cache;
       key_payload_t key_payload(
           cur_key_cache, boundary_x, boundary_y, pitch, start_x, start_y);
-      // key_prefetch_payload_t key_prefetch_payload(
-      //     cur_key_cache, boundary_x, boundary_y, pitch, start_x, start_y);
 
-      uint32_t boundary_query_y = query_group_size;
-      uint32_t boundary_query_x = max_head_size;
+      constexpr uint32_t boundary_query_y = query_group_size;
+      constexpr uint32_t boundary_query_x = max_head_size;
       auto* cur_query = args.query + ctx.seq_id * args.num_heads * max_head_size + 
           ctx.kv_head_id * query_group_size * max_head_size;
       
       query_payload_t query_payload(
           cur_query, boundary_query_x, boundary_query_y, max_head_size, 0, 0);
 
-// #pragma unroll
-//       for (int i = 0; i < stages; i++) {
-//         constexpr int key_update_stride = has_2d_ld_st ? head_size_stride : 1;
-//         subgroup::tile_prefetch(key_prefetch_payload);
-//         key_prefetch_payload.template update_tdesc<key_update_dir>(
-//             key_update_stride);
-//       }
       score_sub.reg = 0; 
 #pragma unroll
       for (int i = 0; i < loop_count; i++) {
@@ -664,7 +648,7 @@ class paged_attention_kernel {
         arch_tag>;
 
     uint32_t start_y = ctx.sg_id;
-    uint32_t boundary_y = query_group_size;
+    constexpr uint32_t boundary_y = query_group_size;
     sm_local_ld_payload_t sm_local_ld_payload(
         slm_offset_score,
         partition_size,
@@ -785,7 +769,7 @@ class paged_attention_kernel {
     using exp_score_payload_t = subgroup::mem_payload_t<
         mem_desc_t<scalar_t, mem_layout::row_major, mem_space::local>,
         exp_score_tile_desc_t,
-        msg_type::scatter,  // TODO(baodi): block 2d to shared local mem?
+        msg_type::scatter,
         arch_tag>;
     constexpr tdesc_update_dir exp_score_update_dir = tdesc_update_dir::x_dir;
       
@@ -826,13 +810,8 @@ class paged_attention_kernel {
       value_payload_t value_payload(
           cur_value_cache, boundary_v_x, boundary_v_y, pitch_v, start_v_x, 0);
 
-      // TODO(baodi): we can use prefetch here to overlap the mma
-
       subgroup::tile_load(mat_exp_score, exp_score_payload);
       subgroup::tile_load(mat_value, value_payload);
-
-      // sycl::ext::oneapi::experimental::printf("kv_head_id: %d, seq_id: %d, partition_id: %d, sg_id: %d\n", 
-      //     ctx.kv_head_id, ctx.seq_id, ctx.partition_id, ctx.sg_id);
 
       exp_score_payload.template update_tdesc<exp_score_update_dir>(block_size);
 
@@ -886,9 +865,6 @@ class paged_attention_kernel {
     static const sycl::range<3> local_range = sycl::range<3>{1, 1, wg_size};
     sycl::range<3> group_range =
         sycl::range<3>{num_kv_heads, num_seqs, max_num_partitions};
-    // printf("group_range: %zu, %zu, %zu local_range: %zu, %zu, %zu\n",
-    //        group_range[0], group_range[1], group_range[2],
-    //        local_range[0], local_range[1], local_range[2]); // Debugging output */
     return sycl::nd_range<3>{group_range * local_range, local_range};
   };
 
