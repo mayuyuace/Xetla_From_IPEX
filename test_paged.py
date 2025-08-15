@@ -123,7 +123,7 @@ def attention_ref(
     output = torch.einsum("bhts,bshd->bthd", attention_drop, v * dropout_scaling)
     if query_padding_mask is not None:
         output.masked_fill_(rearrange(~query_padding_mask, "b s -> b s 1 1"), 0.0)
-    return output.to(dtype=dtype_og), scores.to(dtype=dtype_og)
+    return output.to(dtype=dtype_og), attention.to(dtype=dtype_og)
 
 def _generate_block_kvcache(seqlen_k, paged_kv_block_size, batch_size, nheads_k, d, device, dtype):
     # num_blocks = math.ceil(seqlen_k / paged_kv_block_size) * batch_size * 3
@@ -178,6 +178,7 @@ def _generate_block_kvcache(seqlen_k, paged_kv_block_size, batch_size, nheads_k,
         (1, 2048),
         (1, 20000),
         (1, 40000),
+        (1, 50000),
     ],
 )
 @pytest.mark.parametrize(
@@ -403,14 +404,16 @@ def test_flash_attn_kvcache(
     )
 
     if do_performance:
-        num_iters = 40
+        num_iters = 1000
         num_warm = 5
+        num_kv = 50
         k_caches = list()
         v_caches = list()
-        for i in range(num_iters + num_warm):
+        for i in range(num_kv):
             k_caches.append(k_cache_paged.clone())
             v_caches.append(v_cache_paged.clone())
         for i in range(num_iters + num_warm):
+            cur_idx = int(i % num_kv)
             eclips_times = paged_attention.run(
                 max_logits,
                 exp_sums,
@@ -418,8 +421,8 @@ def test_flash_attn_kvcache(
                 out,
                 debug_output,
                 query,
-                k_caches[i],
-                v_caches[i],
+                k_caches[cur_idx],
+                v_caches[cur_idx],
                 block_table,
                 context_lens,
                 num_queries_per_token,
@@ -432,7 +435,7 @@ def test_flash_attn_kvcache(
             attn_time = eclips_times[0]
             reduce_time = eclips_times[1]
             total_time = attn_time + reduce_time
-            total_kv_size = k_caches[i].numel() * k_caches[i].element_size() * 2
+            total_kv_size = k_cache_paged.numel() * k_cache_paged.element_size() * 2
             if i >= num_warm:
                 print(
                     f"Iter {i - num_warm + 1}, "
@@ -440,7 +443,7 @@ def test_flash_attn_kvcache(
                     f"Attn: {attn_time:.2f} us, "
                     f"Reduce: {reduce_time:.2f} us, "
                     f"Total KV size: {total_kv_size / (1024 * 1024):.2f} MB, "
-                    f"Bandwidth: {total_kv_size / total_time / (1000):.2f} GB/s"
+                    f"Bandwidth: {total_kv_size / attn_time / (1000):.2f} GB/s"
                 )
     out_ref = out_ref.squeeze(1)
     out_pt = out_pt.squeeze(1)
