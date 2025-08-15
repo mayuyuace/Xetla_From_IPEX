@@ -27,6 +27,249 @@ namespace gpu::xetla {
 namespace attention {
 constexpr float neg_infinity = INFINITY * -1;
 
+template <typename mat_t>
+struct tile_mask_t {
+  using accum_t = typename mat_t::dtype;
+  static constexpr accum_t kNegInfinity = INFINITY * -1;
+  static constexpr uint32_t tile_size_x = mat_t::tile_size_x;
+  static constexpr uint32_t tile_size_y = mat_t::tile_size_y;
+  static constexpr uint32_t block_size_x = mat_t::block_size_x;
+  static constexpr uint32_t block_size_y = mat_t::block_size_y;
+  static constexpr int32_t num_block_x = mat_t::num_block_x;
+  static constexpr uint32_t block_elems = mat_t::block_elems;
+
+  // --------------------- // causal_mask // ---------------------- //
+
+  inline static void causal_mask(
+      mat_t& src,
+      uint32_t start_x,
+      uint32_t start_y) {
+#pragma unroll
+    for (uint32_t i = 0; i < tile_size_y / block_size_y; i++) {
+      uint32_t blk_start_y = start_y + i * block_size_y;
+#pragma unroll
+      for (int j = 0; j < num_block_x; j++) {
+        uint32_t blk_start_x = start_x + j * block_size_x;
+        if (blk_start_x + block_size_x > blk_start_y) {
+          xetla_vector<uint32_t, block_size_x> blk_seq_x =
+              xetla_vector_gen<uint32_t, block_size_x>(blk_start_x, 1);
+          auto src_sub =
+              src.reg
+                  .xetla_select<block_elems, 1>(
+                      (i * num_block_x + j) * block_elems)
+                  .xetla_format<accum_t, block_size_y, block_size_x>();
+#pragma unroll
+          for (int k = 0; k < block_size_y; k++) {
+            xetla_mask<block_size_x> mask = blk_seq_x > blk_start_y + k;
+            src_sub.row(k).xetla_merge(kNegInfinity, mask);
+          }
+        }
+      }
+    }
+
+    if constexpr ((tile_size_y % block_size_y) != 0) {
+      constexpr uint32_t tail_start_y =
+          tile_size_y / block_size_y * block_size_y;
+      constexpr uint32_t tail_size_y = tile_size_y % block_size_y;
+      constexpr uint32_t tail_block_elems = tail_size_y * block_size_x;
+
+      uint32_t blk_start_y = start_y + tail_start_y;
+#pragma unroll
+      for (int j = 0; j < num_block_x; j++) {
+        uint32_t blk_start_x = start_x + j * block_size_x;
+        if (blk_start_x + block_size_x > blk_start_y) {
+          xetla_vector<uint32_t, block_size_x> blk_seq_x =
+              xetla_vector_gen<uint32_t, block_size_x>(blk_start_x, 1);
+          auto src_sub =
+              src.reg
+                  .xetla_select<tail_block_elems, 1>(
+                      tail_start_y * tile_size_x + j * tail_block_elems)
+                  .xetla_format<accum_t, tail_size_y, block_size_x>();
+#pragma unroll
+          for (int k = 0; k < tail_size_y; k++) {
+            xetla_mask<block_size_x> mask = blk_seq_x > blk_start_y + k;
+            src_sub.row(k).xetla_merge(kNegInfinity, mask);
+          }
+        }
+      }
+    }
+  }
+
+  // -------------------- // padding_mask // ---------------------- //
+
+  inline static void padding_mask(mat_t& src, int num_keep) {
+#pragma unroll
+    for (uint32_t i = 0; i < tile_size_y / block_size_y; i++) {
+#pragma unroll
+      for (uint32_t j = 0; j < num_block_x; j++) {
+        int start_x = j * block_size_x;
+        int num_keep_blk = std::max(0, num_keep - start_x);
+
+        if (num_keep_blk < int(block_size_x)) {
+          xetla_mask<block_size_x> mask =
+              xetla_vector_gen<uint32_t, block_size_x>(1, 1) > num_keep_blk;
+          auto src_sub =
+              src.reg
+                  .xetla_select<block_elems, 1>(
+                      (i * num_block_x + j) * block_elems)
+                  .xetla_format<accum_t, block_size_y, block_size_x>();
+#pragma unroll
+          for (uint32_t k = 0; k < block_size_y; k++) {
+            src_sub.row(k).xetla_merge(kNegInfinity, mask);
+          }
+        }
+      }
+    }
+
+    if constexpr ((tile_size_y % block_size_y) != 0) {
+      constexpr uint32_t tail_start_y =
+          tile_size_y / block_size_y * block_size_y;
+      constexpr uint32_t tail_size_y = tile_size_y % block_size_y;
+      constexpr uint32_t tail_block_elems = tail_size_y * block_size_x;
+#pragma unroll
+      for (int j = 0; j < num_block_x; j++) {
+        int start_x = j * block_size_x;
+        int num_keep_blk = std::max(num_keep - start_x, 0);
+
+        if (num_keep_blk < block_size_x) {
+          xetla_mask<block_size_x> mask =
+              xetla_vector_gen<uint32_t, block_size_x>(1, 1) > num_keep_blk;
+          auto src_sub =
+              src.reg
+                  .xetla_select<tail_block_elems, 1>(
+                      tail_start_y * tile_size_x + j * tail_block_elems)
+                  .xetla_format<accum_t, tail_size_y, block_size_x>();
+#pragma unroll
+          for (int k = 0; k < tail_size_y; k++) {
+            src_sub.row(k).xetla_merge(kNegInfinity, mask);
+          }
+        }
+      }
+    }
+  }
+
+  // -------------------- // local_mask // ---------------------- //
+
+  inline static void local_mask(
+      mat_t& src,
+      uint32_t start_y,
+      uint32_t start_x,
+      int32_t w_left,
+      int32_t w_right) {
+#pragma unroll
+    for (uint32_t i = 0; i < tile_size_y / block_size_y; i++) {
+      int blk_start_y = start_y + i * block_size_y;
+#pragma unroll
+      for (uint32_t j = 0; j < num_block_x; j++) {
+        auto src_sub = src.reg
+                           .xetla_select<block_elems, 1>(
+                               (i * num_block_x + j) * block_elems)
+                           .xetla_format<accum_t, block_size_y, block_size_x>();
+        int real_x = start_x + j * block_size_x;
+        xetla_vector<int32_t, block_size_x> blk_seq_x =
+            xetla_vector_gen<int32_t, block_size_x>(real_x, 1);
+#pragma unroll
+        for (uint32_t k = 0; k < block_size_y; k++) {
+          int real_y = blk_start_y + k;
+          if (w_right >= 0) {
+            int local_right = real_y + w_right;
+            xetla_mask<block_size_x> mask = blk_seq_x > local_right;
+            src_sub.row(k).xetla_merge(kNegInfinity, mask);
+          }
+
+          if (w_left >= 0) {
+            int local_left = real_y - w_left;
+            xetla_mask<block_size_x> mask = blk_seq_x < local_left;
+            src_sub.row(k).xetla_merge(kNegInfinity, mask);
+          }
+        }
+      }
+    }
+
+    if constexpr ((tile_size_y % block_size_y) != 0) {
+      constexpr uint32_t tail_start_y =
+          tile_size_y / block_size_y * block_size_y;
+      constexpr uint32_t tail_size_y = tile_size_y % block_size_y;
+      constexpr uint32_t tail_block_elems = tail_size_y * block_size_x;
+#pragma unroll
+      for (int j = 0; j < num_block_x; j++) {
+        auto src_sub =
+            src.reg
+                .xetla_select<tail_block_elems, 1>(
+                    tail_start_y * tile_size_x + j * tail_block_elems)
+                .xetla_format<accum_t, tail_size_y, block_size_x>();
+        int real_x = start_x + j * block_size_x;
+        xetla_vector<int32_t, block_size_x> blk_seq_x =
+            xetla_vector_gen<int32_t, block_size_x>(real_x, 1);
+#pragma unroll
+        for (int k = 0; k < tail_size_y; k++) {
+          int real_y = start_y + tail_start_y + k;
+          if (w_right >= 0) {
+            int local_right = real_y + w_right;
+            xetla_mask<block_size_x> mask = blk_seq_x > local_right;
+            src_sub.row(k).xetla_merge(kNegInfinity, mask);
+          }
+
+          if (w_left >= 0) {
+            int local_left = real_y - w_left;
+            xetla_mask<block_size_x> mask = blk_seq_x < local_left;
+            src_sub.row(k).xetla_merge(kNegInfinity, mask);
+          }
+        }
+      }
+    }
+  }
+
+  // -------------------- // alibi_mask // ---------------------- //
+
+  inline static void alibi_mask(
+      mat_t& src,
+      float alibi_slopes,
+      uint32_t start_x,
+      [[maybe_unused]] uint32_t start_y) {
+#pragma unroll
+    for (uint32_t i = 0; i < tile_size_y / block_size_y; i++) {
+#pragma unroll
+      for (int j = 0; j < num_block_x; j++) {
+        uint32_t blk_start_x = start_x + j * block_size_x;
+        xetla_vector<float, block_size_x> blk_seq_x =
+            xetla_vector_gen<float, block_size_x>(blk_start_x, 1);
+        auto src_sub = src.reg
+                           .xetla_select<block_elems, 1>(
+                               (i * num_block_x + j) * block_elems)
+                           .xetla_format<accum_t, block_size_y, block_size_x>();
+#pragma unroll
+        for (int k = 0; k < block_size_y; k++) {
+          src_sub.row(k) += (blk_seq_x * alibi_slopes);
+        }
+      }
+    }
+
+    if constexpr ((tile_size_y % block_size_y) != 0) {
+      constexpr uint32_t tail_start_y =
+          tile_size_y / block_size_y * block_size_y;
+      constexpr uint32_t tail_size_y = tile_size_y % block_size_y;
+      constexpr uint32_t tail_block_elems = tail_size_y * block_size_x;
+
+#pragma unroll
+      for (int j = 0; j < num_block_x; j++) {
+        uint32_t blk_start_x = start_x + j * block_size_x;
+        xetla_vector<float, block_size_x> blk_seq_x =
+            xetla_vector_gen<float, block_size_x>(blk_start_x, 1);
+        auto src_sub =
+            src.reg
+                .xetla_select<tail_block_elems, 1>(
+                    tail_start_y * tile_size_x + j * tail_block_elems)
+                .xetla_format<accum_t, tail_size_y, block_size_x>();
+#pragma unroll
+        for (int k = 0; k < tail_size_y; k++) {
+          src_sub.row(k) += (blk_seq_x * alibi_slopes);
+        }
+      }
+    }
+  }
+};
+
 inline void SW_BARRIER() {
 #if __INTEL_LLVM_COMPILER >= 20250000
 #if defined(__SYCL_DEVICE_ONLY__)

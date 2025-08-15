@@ -535,6 +535,20 @@ class paged_attention_kernel {
     
     query_tile_t mat_query;
     key_tile_t mat_key;
+    score_acc_tile_t score_sub(neg_infinity);
+      
+    constexpr uint32_t boundary_score_y = query_group_size;
+    uint32_t start_score_x = ctx.sg_id * block_size;
+    uint32_t boundary_score_x = start_score_x + block_size;
+
+    score_payload_t score_payload(
+        slm_offset_score,
+        boundary_score_x,
+        boundary_score_y,
+        partition_size,
+        start_score_x,
+        0);
+
 
     // iterate over context blocks
     for (int bid = ctx.sg_id + ctx.start_block_id, row_i = 0;
@@ -546,6 +560,7 @@ class paged_attention_kernel {
       // Note, we didn't add correct boundary for context length, as we handled
       // this in following mask
       const int block_id = ctx.block_table[bid];
+      // sycl::ext::oneapi::experimental::printf("block_id: %d\n", block_id); 
       
       int32_t start_y = block_id * block_size;
       uint32_t boundary_y = start_y + block_size;
@@ -566,19 +581,6 @@ class paged_attention_kernel {
       query_payload_t query_payload(
           cur_query, boundary_query_x, boundary_query_y, max_head_size, 0, 0);
 
-      uint32_t boundary_score_y = query_group_size;
-      uint32_t start_score_x = ctx.sg_id * block_size;
-      uint32_t boundary_score_x = start_score_x + block_size;
-
-      score_payload_t score_payload(
-          slm_offset_score,
-          boundary_score_x,
-          boundary_score_y,
-          partition_size,
-          start_score_x,
-          0);
-
-
 // #pragma unroll
 //       for (int i = 0; i < stages; i++) {
 //         constexpr int key_update_stride = has_2d_ld_st ? head_size_stride : 1;
@@ -586,9 +588,7 @@ class paged_attention_kernel {
 //         key_prefetch_payload.template update_tdesc<key_update_dir>(
 //             key_update_stride);
 //       }
-      
-      score_acc_tile_t score_sub(0.0f);
-
+      score_sub.reg = 0; 
 #pragma unroll
       for (int i = 0; i < loop_count; i++) {
         subgroup::tile_load(mat_query, query_payload);
@@ -601,10 +601,14 @@ class paged_attention_kernel {
         tile_mma::mma(score_sub, score_sub, mat_key, mat_query);
         SW_BARRIER();
       }
-      subgroup::tile_store(score_sub, score_payload);
-      xetla_fence<memory_kind::shared_local>();
-
-      // score_sub.reg *= args.sm_scale;
+      score_sub.reg *= args.sm_scale;
+      
+      uint32_t remained_len = ctx.context_len - bid * block_size;
+      using remain_tile_mask = tile_mask_t<score_acc_tile_t>;
+      if (remained_len < block_size) {
+        remain_tile_mask::padding_mask(score_sub, remained_len);
+      }
+      
       // if (args.softcap > 0.0) {
       //   score_sub.reg /= args.softcap;
       //   tanh_t tanh;
@@ -619,17 +623,12 @@ class paged_attention_kernel {
       //       xetla_vector_gen<float, block_size>(mat_real_x, 1);
       //   score_sub += (pos_id * ctx.alibi_slopes);
       // }
-
-      // uint32_t remained_len = ctx.context_len - bid * block_size;
-      // if (remained_len < block_size) {
-      //   xetla_mask<block_size> mask =
-      //       xetla_vector_gen<uint32_t, block_size>(1, 1) > remained_len;
-      //   score_sub.xetla_merge(neg_infinity, mask);
-      // }
       
       // mat_score.reg.xetla_select<query_group_size * block_size, 1>(
       //     row_i * query_group_size * block_size) = score_sub.reg;
     }
+    subgroup::tile_store(score_sub, score_payload);
+    xetla_fence<memory_kind::shared_local>();
     if constexpr (wg_size > 1)
       ctx.nbarrier.arrive_wait();
   }
@@ -887,9 +886,9 @@ class paged_attention_kernel {
     static const sycl::range<3> local_range = sycl::range<3>{1, 1, wg_size};
     sycl::range<3> group_range =
         sycl::range<3>{num_kv_heads, num_seqs, max_num_partitions};
-    printf("group_range: %zu, %zu, %zu local_range: %zu, %zu, %zu\n",
-           group_range[0], group_range[1], group_range[2],
-           local_range[0], local_range[1], local_range[2]); // Debugging output */
+    // printf("group_range: %zu, %zu, %zu local_range: %zu, %zu, %zu\n",
+    //        group_range[0], group_range[1], group_range[2],
+    //        local_range[0], local_range[1], local_range[2]); // Debugging output */
     return sycl::nd_range<3>{group_range * local_range, local_range};
   };
 
@@ -1047,18 +1046,11 @@ class paged_attention_reduce {
       float init_value) {
     using ld_tile_desc_t = subgroup::tile_desc_t<partition_stride, 1, 1, 1>;
     using ld_tile_t = subgroup::tile_t<accum_t, ld_tile_desc_t>;
-    using ld_payload_t = std::conditional_t<
-        has_2d_ld_st,
-        subgroup::mem_payload_t<
-            mem_desc_t<accum_t, mem_layout::row_major, mem_space::global>,
-            ld_tile_desc_t,
-            msg_type::block_2d,
-            arch_tag>,
-        subgroup::mem_payload_t<
-            mem_desc_t<accum_t, mem_layout::row_major, mem_space::global>,
-            ld_tile_desc_t,
-            msg_type::block_1d,
-            arch_tag>>;
+    using ld_payload_t = subgroup::mem_payload_t<
+                            mem_desc_t<accum_t, mem_layout::row_major, mem_space::global>,
+                            ld_tile_desc_t,
+                            msg_type::block_1d,
+                            arch_tag>;
     static constexpr tdesc_update_dir update_dir = tdesc_update_dir::x_dir;
 
     int32_t start_x = ctx.sg_id * partition_stride;
@@ -1083,9 +1075,9 @@ class paged_attention_reduce {
       src_sub = ld_tile.reg;
       ctx.update_partition_num(row_i + 1);
 
-      accum_t scalar_value = src_sub.xetla_select<1, 1>(0)[0];
-      sycl::ext::oneapi::experimental::printf("head_id: %d, sg_id: %d scalar_value: %f\n",
-          ctx.head_id, ctx.sg_id, scalar_value); // Debugging output
+      // accum_t scalar_value = src_sub.xetla_select<1, 1>(0)[0];
+      // sycl::ext::oneapi::experimental::printf("head_id: %d, sg_id: %d scalar_value: %f\n",
+      //     ctx.head_id, ctx.sg_id, scalar_value); // Debugging output
 
       int32_t remain = ctx.num_partitions - i;
       if (remain < partition_stride) {
@@ -1355,9 +1347,9 @@ class paged_attention_reduce {
       uint32_t num_heads) {
     static const sycl::range<3> local_range = sycl::range<3>{1, 1, wg_size};
     sycl::range<3> group_range = sycl::range<3>{num_seqs, num_heads, 1};
-    printf("group_range: %zu, %zu, %zu local_range: %zu, %zu, %zu\n",
-           group_range[0], group_range[1], group_range[2],
-           local_range[0], local_range[1], local_range[2]); // Debugging output */
+    // printf("group_range: %zu, %zu, %zu local_range: %zu, %zu, %zu\n",
+    //        group_range[0], group_range[1], group_range[2],
+    //        local_range[0], local_range[1], local_range[2]); // Debugging output */
     return sycl::nd_range<3>{group_range * local_range, local_range};
   };
 

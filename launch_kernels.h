@@ -33,26 +33,26 @@ inline auto launch_paged_attn_v2(
   auto propList =
       sycl::property_list{sycl::property::queue::enable_profiling()};
   sycl::queue q{sycl::gpu_selector_v, propList};
-  // auto event1 = q
-  //     .submit([&](sycl::handler &cgh) {
-  //       cgh.parallel_for<kernel>(
-  //           nd_range, [=](sycl::nd_item<3> item) SYCL_ESIMD_KERNEL {
-  //             kernel kernel_fn;
-  //             typename kernel::arguments_t args(
-  //                 max_logits, exp_sums, reinterpret_cast<T *>(tem_out),
-  //                 reinterpret_cast<T *>(debug_out),
-  //                 reinterpret_cast<T *>(query),
-  //                 reinterpret_cast<T *>(key_cache),
-  //                 reinterpret_cast<T *>(value_cache),
-  //                 reinterpret_cast<float *>(alibi_slopes),
-  //                 reinterpret_cast<U *>(block_tables),
-  //                 reinterpret_cast<U *>(context_lens), num_queries_per_tokens,
-  //                 sm_scale, num_seqs, num_heads, num_kv_heads, head_size,
-  //                 max_blocks_per_seq, softcap);
-  //             kernel_fn(item, args);
-  //           });
-  //     });
-  // event1.wait();
+  auto event1 = q
+      .submit([&](sycl::handler &cgh) {
+        cgh.parallel_for<kernel>(
+            nd_range, [=](sycl::nd_item<3> item) SYCL_ESIMD_KERNEL {
+              kernel kernel_fn;
+              typename kernel::arguments_t args(
+                  max_logits, exp_sums, reinterpret_cast<T *>(tem_out),
+                  reinterpret_cast<T *>(debug_out),
+                  reinterpret_cast<T *>(query),
+                  reinterpret_cast<T *>(key_cache),
+                  reinterpret_cast<T *>(value_cache),
+                  reinterpret_cast<float *>(alibi_slopes),
+                  reinterpret_cast<U *>(block_tables),
+                  reinterpret_cast<U *>(context_lens), num_queries_per_tokens,
+                  sm_scale, num_seqs, num_heads, num_kv_heads, head_size,
+                  max_blocks_per_seq, softcap);
+              kernel_fn(item, args);
+            });
+      });
+  event1.wait();
 
   // launch reduce kernel
 
@@ -75,7 +75,7 @@ inline auto launch_paged_attn_v2(
       });
   event2.wait();
   return std::vector<float>{
-      get_exe_time(event2), get_exe_time(event2)}; // return execution times
+      get_exe_time(event1), get_exe_time(event2)}; // return execution times
 }
 
 template <typename T, typename U, gpu_arch arch_tag>
