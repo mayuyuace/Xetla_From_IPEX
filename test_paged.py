@@ -151,6 +151,21 @@ def _generate_block_kvcache(seqlen_k, paged_kv_block_size, batch_size, nheads_k,
     )[:, :seqlen_k]
     return k_cache, v_cache, block_table, k_cache_paged, v_cache_paged, num_blocks
 
+def generate_random_padding_mask(max_seqlen, batch_size, device, mode="random"):
+    assert mode in ["full", "random", "third"]
+    if mode == "full":
+        lengths = torch.full((batch_size, 1), max_seqlen, device=device, dtype=torch.int32)
+    elif mode == "random":
+        lengths = torch.randint(
+            max(1, max_seqlen - 20), max_seqlen + 1, (batch_size, 1), device=device
+        )
+    elif mode == "third":
+        lengths = torch.randint(max_seqlen // 3, max_seqlen + 1, (batch_size, 1), device=device)
+    padding_mask = (
+        repeat(torch.arange(max_seqlen, device=device), "s -> b s", b=batch_size) < lengths
+    )
+    return padding_mask, lengths
+
 @pytest.mark.parametrize("dtype", [torch.float16])
 @pytest.mark.parametrize("batch_size", [1, 2])
 @pytest.mark.parametrize("num_splits", [1])
@@ -165,6 +180,7 @@ def _generate_block_kvcache(seqlen_k, paged_kv_block_size, batch_size, nheads_k,
 @pytest.mark.parametrize("paged_kv_block_size", [64])
 @pytest.mark.parametrize("has_leftpad", [False])
 @pytest.mark.parametrize("has_batch_idx", [False])
+@pytest.mark.parametrize("varlen", [False, True])
 @pytest.mark.parametrize("d", [128])
 @pytest.mark.parametrize(
     "seqlen_q,seqlen_k",
@@ -215,6 +231,7 @@ def test_flash_attn_kvcache(
     mha_type,
     num_splits,
     dtype,
+    varlen,
     do_performance=False,
 ):
     if seqlen_q > seqlen_k and new_kv:
@@ -276,7 +293,8 @@ def test_flash_attn_kvcache(
         cache_leftpad = None
     arange = rearrange(torch.arange(seqlen_k, device=device), "s -> 1 s")
     cache_seqlens_expanded = rearrange(cache_seqlens, "b -> b 1")
-    key_padding_mask = arange < cache_seqlens_expanded + (seqlen_new if new_kv else 0)
+    # key_padding_mask = arange < cache_seqlens_expanded + (seqlen_new if new_kv else 0)
+    key_padding_mask, seq_lens = generate_random_padding_mask(seqlen_k, batch_size, device, mode="random")
     if has_leftpad:
         key_padding_mask = torch.logical_and(
             key_padding_mask, arange >= cache_leftpad.unsqueeze(-1).expand(-1, seqlen_k)
@@ -350,7 +368,7 @@ def test_flash_attn_kvcache(
         k_cache_rep,
         v_cache_rep,
         None,
-        None,
+        key_padding_mask if varlen else None,
         attn_bias,
         0.0,
         None,
@@ -363,7 +381,7 @@ def test_flash_attn_kvcache(
         k_cache_rep,
         v_cache_rep,
         None,
-        None,
+        key_padding_mask if varlen else None,
         attn_bias,
         0.0,
         None,
@@ -384,6 +402,8 @@ def test_flash_attn_kvcache(
     query = q.view(batch_size * seqlen_q, nheads, d).contiguous().to(device=device, dtype=torch.float16)
     alibi_slopes = torch.ones((nheads), dtype=torch.float32, device=device)
     context_lens = torch.tensor([seqlen_k] * batch_size, dtype=torch.int32, device=device)
+    context_lens = seq_lens.squeeze(1).to(torch.int32).to(device) if varlen else context_lens
+    print(f"seq_lens: {seq_lens}")
 
     num_queries_per_token = int(nheads / nheads_k)
     sm_scale = 1. / math.sqrt(d)
@@ -457,10 +477,10 @@ def test_flash_attn_kvcache(
     print(f"eclips times: {eclips_times}")
     # assert_close_verbose(out_attn_2, debug_output, rtol=1e-3, atol=1e-3)
     # assert_close_verbose(out, out_ref, rtol=1e-3, atol=1e-3)
-    # exit(0)
     # print(f"debug_output: {debug_output[0, 0, :]}")
     # print(f"out_attn_2: {out_attn_2[0, 0, :]}")
     print(f"scores max diff: {(out_attn_2 - debug_output[:, :, :seqlen_k]).abs().max().item()}")
+    # exit(0)
     print(f"Output max diff: {(out - out_ref).abs().max().item()}")
     print(f"Output mean diff: {(out - out_ref).abs().mean().item()}")
     print(f"Pytorch max diff: {(out_pt - out_ref).abs().max().item()}")
@@ -495,11 +515,11 @@ def test_flash_attn_kvcache(
 
 if __name__ == "__main__":
     test_flash_attn_kvcache(
-        batch_size = 1,
-        nheads = 2,
+        batch_size = 2,
+        nheads = 16,
         nheads_k = 2,
         seqlen_q = 1,
-        seqlen_k = 1024,
+        seqlen_k = 512,
         d = 128,
         has_batch_idx = False,
         has_leftpad = False,
@@ -514,5 +534,6 @@ if __name__ == "__main__":
         mha_type = "gqa",
         num_splits = 1,
         dtype = torch.float16,
+        varlen=True,
         do_performance=False,
     )

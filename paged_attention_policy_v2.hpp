@@ -29,10 +29,6 @@ struct paged_attention_policy_v2 : paged_attention_base_policy {
   static constexpr uint32_t wg_size =
       partition_size / block_size > 32 ? 32 : partition_size / block_size;
   static constexpr uint32_t query_group_size = query_group_size_;
-  static constexpr uint32_t query_group_size_sub = query_group_size;
-  // static constexpr uint32_t query_group_size_sub = query_group_size % 8 == 0
-  //     ? 8
-  //     : 1;
   static constexpr uint32_t max_blocks_per_sg =
       partition_size / (block_size * wg_size);
   // for reduction kernel
