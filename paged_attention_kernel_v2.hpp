@@ -300,9 +300,6 @@ class paged_attention_kernel {
     index_t* block_tables; // [num_seqs, max_blocks_per_seq]
     index_t* context_lens; // [num_seqs]
 
-    // The number of queries to process per key/value header
-    uint32_t num_queries_per_tokens;
-
     // Softmax scale
     accum_t sm_scale;
 
@@ -325,7 +322,6 @@ class paged_attention_kernel {
         float* alibi_slopes,
         index_t* block_tables,
         index_t* context_lens,
-        uint32_t num_queries_per_tokens,
         accum_t sm_scale,
         uint32_t num_seqs,
         uint32_t num_heads,
@@ -343,7 +339,6 @@ class paged_attention_kernel {
           alibi_slopes(alibi_slopes),
           block_tables(block_tables),
           context_lens(context_lens),
-          num_queries_per_tokens(num_queries_per_tokens),
           sm_scale(sm_scale),
           num_seqs(num_seqs),
           num_heads(num_heads),
@@ -380,19 +375,9 @@ class paged_attention_kernel {
       sizeof(accum_t);
   static constexpr uint32_t slm_size_exp_score = query_group_size * partition_size *
       sizeof(scalar_t);
-  static constexpr uint32_t slm_size_query = max_head_size * sizeof(scalar_t);
-  static constexpr uint32_t slm_size_softmax =
-      (wg_size > 1) ? wg_size * sizeof(accum_t) : 0;
-  static constexpr uint32_t slm_size_out =
-      max_head_size * wg_size * sizeof(accum_t);
 
   static constexpr uint32_t slm_offset_score = 0;
   static constexpr uint32_t slm_offset_exp_score = slm_offset_score + slm_size_score;
-  static constexpr uint32_t slm_offset_query = 0;
-  static constexpr uint32_t slm_offset_softmax =
-      slm_offset_query + slm_size_query;
-  static constexpr uint32_t slm_offset_out =
-      slm_offset_softmax + slm_size_softmax;
 
   static constexpr uint32_t nbarrier_cnt = (wg_size > 1) ? 1 : 0;
   // This boolean variable will determine whether the kernel will execute 2d
@@ -436,15 +421,15 @@ class paged_attention_kernel {
       partition_id = item.get_group(2);
       max_num_partitions = item.get_group_range(2);
 
-      if (args.alibi_slopes != nullptr) {
-        alibi_slopes = args.alibi_slopes[head_id];
-      }
+      // head_id = kv_head_id * query_group_size;
+      // if (args.alibi_slopes != nullptr) {
+      //   alibi_slopes = args.alibi_slopes[head_id];
+      // }
 
       context_len = args.context_lens[seq_id];
       block_table = args.block_tables + seq_id * args.max_blocks_per_seq;
       num_blocks_per_sg = 0;
 
-      head_id = kv_head_id * query_group_size;
       kv_block_stride = args.num_kv_heads * max_head_size * block_size;
       kv_head_stride = max_head_size * kv_head_id;
 
@@ -480,7 +465,7 @@ class paged_attention_kernel {
   inline void compute_score(arguments_t& args) {
     constexpr uint32_t sg_tile_size_head =
         head_size_stride > 32 / sizeof(scalar_t) ? 32 / sizeof(scalar_t)
-                                                 : head_size_stride;
+                                                 : head_size_stride;  // 16
     constexpr uint32_t sg_tile_size_block = mma_sg_tile_size;
 
     using score_payload_t = subgroup::mem_payload_t<
@@ -607,9 +592,6 @@ class paged_attention_kernel {
       //       xetla_vector_gen<float, block_size>(mat_real_x, 1);
       //   score_sub += (pos_id * ctx.alibi_slopes);
       // }
-      
-      // mat_score.reg.xetla_select<query_group_size * block_size, 1>(
-      //     row_i * query_group_size * block_size) = score_sub.reg;
     }
     subgroup::tile_store(score_sub, score_payload);
     xetla_fence<memory_kind::shared_local>();
@@ -712,10 +694,11 @@ class paged_attention_kernel {
 
     uint32_t start_g_x = ctx.partition_id;
     uint32_t boundary_g_x = ctx.max_num_partitions;
-    uint32_t start_g_y = ctx.kv_head_id * query_group_size + ctx.sg_id;
-    uint32_t boundary_g_y = start_g_y + 1;
+    uint32_t start_g_y = ctx.sg_id;
+    constexpr uint32_t boundary_g_y = query_group_size;
 
-    auto* cur_max_logits = args.max_logits + ctx.seq_id * args.num_heads * ctx.max_num_partitions;
+    auto* cur_max_logits = args.max_logits + ctx.seq_id * args.num_heads * ctx.max_num_partitions + 
+        ctx.kv_head_id * query_group_size * ctx.max_num_partitions;
     global_scalar_st_payload_t max_logits_st_payload(
         cur_max_logits,
         boundary_g_x,
@@ -726,7 +709,8 @@ class paged_attention_kernel {
     scalar_tile_t max_logit_scalar(max_score[0]);
     subgroup::tile_store(max_logit_scalar, max_logits_st_payload);
 
-    auto* cur_exp_sums = args.exp_sums + ctx.seq_id * args.num_heads * ctx.max_num_partitions;
+    auto* cur_exp_sums = args.exp_sums + ctx.seq_id * args.num_heads * ctx.max_num_partitions + 
+        ctx.kv_head_id * query_group_size * ctx.max_num_partitions;
     global_scalar_st_payload_t exp_sums_st_payload(
         cur_exp_sums,
         boundary_g_x,

@@ -186,6 +186,13 @@ def _generate_block_kvcache(seqlen_k, paged_kv_block_size, batch_size, nheads_k,
     [
         (8, 1),
         (16, 2),
+        (10, 2),
+        (14, 2),
+        (12, 2),
+        (8, 2),
+        (6, 2),
+        (4, 2),
+        (2, 2),
     ],
 )
 def test_flash_attn_kvcache(
@@ -223,10 +230,8 @@ def test_flash_attn_kvcache(
     torch.random.manual_seed(0)
     # batch_size = 2
     batch_size_cache = batch_size if not has_batch_idx else batch_size * 2
-    nheads = 16
     # rotary_dim must be a multiple of 16, and must be <= d
     rotary_dim = math.floor(int(rotary_fraction * d) / 16) * 16
-    nheads_k = 2
     assert nheads % nheads_k == 0
     window_size = (-1, -1) if not local else torch.randint(0, seqlen_k, (2,))
     q = torch.randn(batch_size, seqlen_q, nheads, d, device=device, dtype=dtype)
@@ -452,9 +457,10 @@ def test_flash_attn_kvcache(
     print(f"eclips times: {eclips_times}")
     # assert_close_verbose(out_attn_2, debug_output, rtol=1e-3, atol=1e-3)
     # assert_close_verbose(out, out_ref, rtol=1e-3, atol=1e-3)
+    # exit(0)
     # print(f"debug_output: {debug_output[0, 0, :]}")
     # print(f"out_attn_2: {out_attn_2[0, 0, :]}")
-    print(f"scores max diff: {(out_attn_2 - debug_output[0, 0, :seqlen_k]).abs().max().item()}")
+    print(f"scores max diff: {(out_attn_2 - debug_output[:, :, :seqlen_k]).abs().max().item()}")
     print(f"Output max diff: {(out - out_ref).abs().max().item()}")
     print(f"Output mean diff: {(out - out_ref).abs().mean().item()}")
     print(f"Pytorch max diff: {(out_pt - out_ref).abs().max().item()}")
@@ -490,10 +496,10 @@ def test_flash_attn_kvcache(
 if __name__ == "__main__":
     test_flash_attn_kvcache(
         batch_size = 1,
-        nheads = 16,
+        nheads = 2,
         nheads_k = 2,
         seqlen_q = 1,
-        seqlen_k = 20480,
+        seqlen_k = 1024,
         d = 128,
         has_batch_idx = False,
         has_leftpad = False,
@@ -508,5 +514,5 @@ if __name__ == "__main__":
         mha_type = "gqa",
         num_splits = 1,
         dtype = torch.float16,
-        do_performance=True,
+        do_performance=False,
     )
