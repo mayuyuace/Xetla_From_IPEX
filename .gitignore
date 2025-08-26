@@ -2,5 +2,6 @@ test_paged_attn
 cscope.out
 tags
 cscope
-paged_attention.so
+mm_int4_out_marlin.so
 __pycache__
+build.log
