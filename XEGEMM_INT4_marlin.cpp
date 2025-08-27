@@ -1,5 +1,3 @@
-#if defined(USE_XETLA)
-
 #include <sycl/sycl.hpp>
 #include <torch/torch.h>
 #include <torch/extension.h>
@@ -131,8 +129,122 @@ static void mm_int4_out_marlin(
   return;
 }
 
-PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
-  m.def("run", &mm_int4_out_marlin, "Marlin Int4 GEMM");
+template <
+    uint32_t wg_m,
+    uint32_t wg_n,
+    uint32_t sg_m,
+    uint32_t sg_n,
+    uint32_t slm_kslicing>
+static size_t get_cnt_size(
+    const int* rows_for_experts_host,
+    uint32_t expert_num,
+    uint32_t matrix_n) {
+  size_t total_group_range_m = 0;
+  for (int i = 0; i < expert_num; ++i) {
+    int expert_i_gemm_m = rows_for_experts_host[i];
+    int tile_m = (expert_i_gemm_m + wg_m - 1) / wg_m;
+    total_group_range_m += tile_m;
+  }
+  size_t group_range_n = (matrix_n + wg_n - 1) / wg_n;
+
+  static constexpr uint32_t wg_size_x = (wg_m + sg_m - 1) / sg_m;
+  static constexpr uint32_t wg_size_y = (wg_n + sg_n - 1) / sg_n;
+  static constexpr uint32_t ks_coop_num_y = GCD<slm_kslicing, sg_m>::value;
+  static constexpr uint32_t coop_remain_num_x = slm_kslicing / ks_coop_num_y;
+  static constexpr bool has_redundant_wg = (coop_remain_num_x * 16) > sg_n;
+  static constexpr uint32_t tile_size_y = sg_m / ks_coop_num_y;
+  static constexpr uint32_t tile_size_x =
+      has_redundant_wg ? 16 : sg_n / coop_remain_num_x;
+  static constexpr uint32_t ks_coop_num_x = sg_n / tile_size_x;
+
+  static constexpr uint32_t counter_size = 8;
+  return total_group_range_m * group_range_n * wg_size_x * wg_size_y * ks_coop_num_y *
+      ks_coop_num_x * counter_size;
+};
+
+static void group_mm_int4_out_marlin(
+    torch::Tensor& out,
+    const torch::Tensor& input,
+    const torch::Tensor& weight,
+    const torch::Tensor& weight_scl,
+    const torch::Tensor& rows_for_experts,
+    const torch::Tensor& rows_for_experts_host,
+    const c10::optional<torch::Tensor>& weight_zp,
+    const int64_t group_size) {
+  using dtype_a = sycl::half;
+  using dtype_b = uint32_t;
+  using dtype_c = sycl::half;
+  using dtype_zp = uint32_t;
+  using dtype_scale = sycl::half;
+  auto total_m = input.size(0);
+  auto k = input.size(1);
+  auto experts_num = weight.size(0);
+  auto n = weight.size(2);
+  auto average_m = (total_m + experts_num - 1) / experts_num;
+  if (out.defined())
+    out = out.flatten(0, -2);
+  else
+    out = torch::empty({total_m, n}, input.options());
+  dtype_zp* weight_zp_ptr = nullptr;
+  if (weight_zp.has_value()) {
+    weight_zp_ptr = static_cast<dtype_zp*>(weight_zp->data_ptr());
+  }
+  torch::Tensor *acc_tensor_ = nullptr, *cnt_tensor_ = nullptr;
+  size_t acc_size = get_acc_size(total_m, n);
+  size_t cnt_size;
+  const int* rows_for_experts_host_ptr =
+      reinterpret_cast<int*>(rows_for_experts_host.data_ptr());
+  if (average_m <= 8) {
+    if (n <= 4096) {
+      static constexpr uint32_t wg_m = GEMVKSlice::wg_m;
+      static constexpr uint32_t wg_n = GEMVKSlice::wg_n;
+      static constexpr uint32_t sg_m = GEMVKSlice::sg_m;
+      static constexpr uint32_t sg_n = GEMVKSlice::sg_n;
+      static constexpr uint32_t local_kslicing = GEMVKSlice::local_kslicing;
+      cnt_size = get_cnt_size<wg_m, wg_n, sg_m, sg_n, local_kslicing>(rows_for_experts_host_ptr, experts_num, n);
+    } else {
+      static constexpr uint32_t wg_m = GEMV::wg_m;
+      static constexpr uint32_t wg_n = GEMV::wg_n;
+      static constexpr uint32_t sg_m = GEMV::sg_m;
+      static constexpr uint32_t sg_n = GEMV::sg_n;
+      static constexpr uint32_t local_kslicing = GEMV::local_kslicing;
+      cnt_size = get_cnt_size<wg_m, wg_n, sg_m, sg_n, local_kslicing>(rows_for_experts_host_ptr, experts_num, n);
+    }
+  } else {
+    static constexpr uint32_t wg_m = GEMM::wg_m;
+    static constexpr uint32_t wg_n = GEMM::wg_n;
+    static constexpr uint32_t sg_m = GEMM::sg_m;
+    static constexpr uint32_t sg_n = GEMM::sg_n;
+    static constexpr uint32_t local_kslicing = GEMM::local_kslicing;
+    cnt_size = get_cnt_size<wg_m, wg_n, sg_m, sg_n, local_kslicing>(rows_for_experts_host_ptr, experts_num, n);
+  }
+
+  torch::Tensor acc_tensor = torch::empty(
+      {static_cast<long>(acc_size)}, input.options().dtype(torch::kFloat), c10::nullopt);
+  torch::Tensor cnt_tensor = torch::empty(
+      {static_cast<long>(cnt_size)}, input.options().dtype(torch::kInt), c10::nullopt);
+  acc_tensor_ = const_cast<torch::Tensor*>(&acc_tensor);
+  cnt_tensor_ = const_cast<torch::Tensor*>(&cnt_tensor);
+
+  launch_group_hgemm_wint4_marlin<dtype_a, dtype_b, dtype_c, dtype_zp, dtype_scale>(
+      static_cast<dtype_c*>(out.data_ptr()),
+      static_cast<dtype_a*>(input.data_ptr()),
+      static_cast<dtype_b*>(weight.data_ptr()),
+      weight_zp_ptr,
+      static_cast<dtype_scale*>(weight_scl.data_ptr()),
+      acc_tensor_->data_ptr<float>(),
+      reinterpret_cast<uint32_t*>(cnt_tensor_->data_ptr()),
+      reinterpret_cast<int*>(rows_for_experts.data_ptr()),
+      reinterpret_cast<int*>(rows_for_experts_host.data_ptr()),
+      experts_num,
+      average_m,
+      n,
+      k);
+  out = resize_as_mat1(input, out);
+  return;
 }
 
-#endif
+PYBIND11_MODULE(TORCH_EXTENSION_NAME, m) {
+  m.def("group_mm", &group_mm_int4_out_marlin, "Marlin Int4 GEMM");
+  m.def("mm", &mm_int4_out_marlin, "Marlin Int4 GEMM");
+}

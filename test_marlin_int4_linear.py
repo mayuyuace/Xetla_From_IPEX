@@ -102,7 +102,7 @@ class TestInt4Linear(TestCase):
             )
         weight = self.shuffle_weight(weight)
         out_xetla = torch.zeros([m, n], dtype=torch.float16, device="xpu")
-        mm_int4_out_marlin.run(
+        mm_int4_out_marlin.mm(
             out_xetla, input, weight, scales, None, group_size
         )
         out_torch = torch.matmul(input_torch, weight_fp16)

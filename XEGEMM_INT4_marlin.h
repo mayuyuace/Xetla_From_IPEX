@@ -82,3 +82,68 @@ void launch_hgemm_wint4_marlin(
 
   return;
 }
+
+template <
+    typename dtype_a,
+    typename dtype_b,
+    typename dtype_c,
+    typename dtype_zp,
+    typename dtype_scale>
+void launch_group_hgemm_wint4_marlin(
+    dtype_c* out,
+    const dtype_a* a,
+    const dtype_b* b,
+    const dtype_zp* b_zp,
+    const dtype_scale* b_scale,
+    const float* acc_buf_ptr,
+    const uint32_t* cnt_buf_ptr,
+    const int* total_rows_for_each_expert,
+    const int* total_rows_for_each_expert_h,
+    const int expert_num,
+    const uint32_t average_m,
+    const uint32_t n,
+    const uint32_t k) {
+  auto& q = dpcppGetCurrentQueue();
+  if (average_m <= 8) {
+    if (n <= 4096) {
+      auto cgfs = group_hgemm_wint4_marlin<
+          dtype_a,
+          dtype_b,
+          dtype_c,
+          dtype_zp,
+          dtype_scale,
+          GEMVKSlice>(
+            out, a, b, b_zp, b_scale, acc_buf_ptr, cnt_buf_ptr,
+            total_rows_for_each_expert,
+            total_rows_for_each_expert_h,
+            expert_num, n, k);
+      DPCPP_Q_SUBMIT_CGFS(q, cgfs);
+    } else {
+      auto cgfs = group_hgemm_wint4_marlin<
+          dtype_a,
+          dtype_b,
+          dtype_c,
+          dtype_zp,
+          dtype_scale,
+          GEMV>(out, a, b, b_zp, b_scale, acc_buf_ptr, cnt_buf_ptr,
+            total_rows_for_each_expert,
+            total_rows_for_each_expert_h,
+            expert_num, n, k);
+      DPCPP_Q_SUBMIT_CGFS(q, cgfs);
+    }
+  } else {
+    auto cgfs = group_hgemm_wint4_marlin<
+        dtype_a,
+        dtype_b,
+        dtype_c,
+        dtype_zp,
+        dtype_scale,
+        GEMM>(out, a, b, b_zp, b_scale, acc_buf_ptr, cnt_buf_ptr,
+            total_rows_for_each_expert,
+            total_rows_for_each_expert_h,
+            expert_num, n, k);
+    DPCPP_Q_SUBMIT_CGFS(q, cgfs);
+  }
+
+  return;
+}

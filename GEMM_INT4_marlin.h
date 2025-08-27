@@ -75,4 +75,25 @@ cgfs_t XETLA_KERNEL_API hgemm_wint4_marlin(
     const uint32_t m,
     const uint32_t n,
     const uint32_t k);
+
+template <
+    typename dtype_a,
+    typename dtype_b,
+    typename dtype_c,
+    typename dtype_zp,
+    typename dtype_scale,
+    typename policy>
+cgfs_t XETLA_KERNEL_API group_hgemm_wint4_marlin(
+    dtype_c* out,
+    const dtype_a* a,
+    const dtype_b* b,
+    const dtype_zp* b_zp,
+    const dtype_scale* b_scale,
+    const float* acc_buf,
+    const uint32_t* cnt_buf,
+    const int* total_rows_for_each_expert,
+    const int* total_rows_for_each_expert_h,
+    const int expert_num,
+    const uint32_t n,
+    const uint32_t k);
 } // namespace torch_ipex::xpu::xetla

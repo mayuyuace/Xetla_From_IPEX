@@ -19,7 +19,7 @@ LIBS = -L$(LIB_DIR) -ltorch_python -ltorch -ltorch_xpu -ltorch_cpu -lc10 -lc10_x
 IPEX_XETLA_DIR = /home2/qiming/workspace/ep/ipex/csrc/gpu/aten/operators/xetla/kernels
 XETLA_INCLUDES = -I$(IPEX_XETLA_DIR)/include -I$(IPEX_XETLA_DIR)
 
-SRC = XEGEMM_INT4_marlin.cpp gemm_int4_marlin_impl.cpp
+SRC = group_gemm_int4_marlin_impl.cpp XEGEMM_INT4_marlin.cpp gemm_int4_marlin_impl.cpp
 OUT = mm_int4_out_marlin.so
 
 all:
