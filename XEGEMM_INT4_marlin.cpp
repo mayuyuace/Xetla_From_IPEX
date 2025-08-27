@@ -61,7 +61,7 @@ static void mm_int4_out_marlin(
     const torch::Tensor& input,
     const torch::Tensor& weight,
     const torch::Tensor& weight_scl,
-    const torch::Tensor& weight_zp,
+    const c10::optional<torch::Tensor>& weight_zp,
     const int64_t group_size) {
   using dtype_a = sycl::half;
   using dtype_b = uint32_t;
@@ -78,8 +78,8 @@ static void mm_int4_out_marlin(
   else
     out = torch::empty({m, n}, input.options());
   dtype_zp* weight_zp_ptr = nullptr;
-  if (weight_zp.defined()) {
-    weight_zp_ptr = static_cast<dtype_zp*>(weight_zp.data_ptr());
+  if (weight_zp.has_value()) {
+    weight_zp_ptr = static_cast<dtype_zp*>(weight_zp->data_ptr());
   }
   torch::Tensor *acc_tensor_ = nullptr, *cnt_tensor_ = nullptr;
   size_t acc_size = get_acc_size(m, n);
