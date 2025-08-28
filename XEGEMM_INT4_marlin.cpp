@@ -167,6 +167,7 @@ static void group_mm_int4_out_marlin(
     const torch::Tensor& input,
     const torch::Tensor& weight,
     const torch::Tensor& weight_scl,
+    const c10::optional<torch::Tensor>& bias,
     const torch::Tensor& rows_for_experts,
     const torch::Tensor& rows_for_experts_host,
     const c10::optional<torch::Tensor>& weight_zp,
@@ -188,6 +189,10 @@ static void group_mm_int4_out_marlin(
   dtype_zp* weight_zp_ptr = nullptr;
   if (weight_zp.has_value()) {
     weight_zp_ptr = static_cast<dtype_zp*>(weight_zp->data_ptr());
+  }
+  dtype_a* bias_ptr = nullptr;
+  if (bias.has_value()) {
+    bias_ptr = static_cast<dtype_a*>(bias->data_ptr());
   }
   torch::Tensor *acc_tensor_ = nullptr, *cnt_tensor_ = nullptr;
   size_t acc_size = get_acc_size(total_m, n);
@@ -232,6 +237,7 @@ static void group_mm_int4_out_marlin(
       static_cast<dtype_b*>(weight.data_ptr()),
       weight_zp_ptr,
       static_cast<dtype_scale*>(weight_scl.data_ptr()),
+      bias_ptr,
       acc_tensor_->data_ptr<float>(),
       reinterpret_cast<uint32_t*>(cnt_tensor_->data_ptr()),
       reinterpret_cast<int*>(rows_for_experts.data_ptr()),

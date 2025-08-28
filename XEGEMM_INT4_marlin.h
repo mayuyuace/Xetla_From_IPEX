@@ -95,6 +95,7 @@ void launch_group_hgemm_wint4_marlin(
     const dtype_b* b,
     const dtype_zp* b_zp,
     const dtype_scale* b_scale,
+    const dtype_a* bias,
     const float* acc_buf_ptr,
     const uint32_t* cnt_buf_ptr,
     const int* total_rows_for_each_expert,
@@ -113,7 +114,7 @@ void launch_group_hgemm_wint4_marlin(
           dtype_zp,
           dtype_scale,
           GEMVKSlice>(
-            out, a, b, b_zp, b_scale, acc_buf_ptr, cnt_buf_ptr,
+            out, a, b, b_zp, b_scale, bias, acc_buf_ptr, cnt_buf_ptr,
             total_rows_for_each_expert,
             total_rows_for_each_expert_h,
             expert_num, n, k);
@@ -125,7 +126,7 @@ void launch_group_hgemm_wint4_marlin(
           dtype_c,
           dtype_zp,
           dtype_scale,
-          GEMV>(out, a, b, b_zp, b_scale, acc_buf_ptr, cnt_buf_ptr,
+          GEMV>(out, a, b, b_zp, b_scale, bias, acc_buf_ptr, cnt_buf_ptr,
             total_rows_for_each_expert,
             total_rows_for_each_expert_h,
             expert_num, n, k);
@@ -138,7 +139,7 @@ void launch_group_hgemm_wint4_marlin(
         dtype_c,
         dtype_zp,
         dtype_scale,
-        GEMM>(out, a, b, b_zp, b_scale, acc_buf_ptr, cnt_buf_ptr,
+        GEMM>(out, a, b, b_zp, b_scale, bias, acc_buf_ptr, cnt_buf_ptr,
             total_rows_for_each_expert,
             total_rows_for_each_expert_h,
             expert_num, n, k);

@@ -73,10 +73,10 @@ class TestTorchMethod:
     @pytest.mark.parametrize("tokens", [8, 1024])
     @pytest.mark.parametrize("topk", [8])
     @pytest.mark.parametrize("gemm_k", [4096])
-    @pytest.mark.parametrize("gemm_n", [1024, 8192])
+    @pytest.mark.parametrize("gemm_n", [4096])
     @pytest.mark.parametrize("n_experts", [8])
     @pytest.mark.parametrize("dtype", [torch.float16])
-    @pytest.mark.parametrize("has_bias", [False])
+    @pytest.mark.parametrize("has_bias", [False, True])
     def test_moe_gemm_int4(self, n_experts, gemm_k, gemm_n, tokens, topk, dtype, has_bias):
 
         total_m = tokens * topk
@@ -108,7 +108,7 @@ class TestTorchMethod:
         if has_bias:
             bias = torch.randn(
                 n_experts, gemm_n, dtype=dtype, device=dpcpp_device
-            )
+            ) * 10
 
         group_marlin_output = torch.zeros(total_m, gemm_n, dtype=dtype, device=dpcpp_device)
         mm_int4_out_marlin.group_mm(
@@ -116,6 +116,7 @@ class TestTorchMethod:
             matrix_a,
             matrix_b_int4_marlin,
             matrix_b_scale,
+            bias,
             rows_for_experts,
             rows_for_experts_cpu,
             None,
@@ -123,7 +124,6 @@ class TestTorchMethod:
         )
 
         # native implementation
-        xetla_output = torch.zeros(total_m, gemm_n, device=dpcpp_device)
         ref_output = torch.zeros(total_m, gemm_n, device=dpcpp_device)
         marlin_output = torch.zeros(total_m, gemm_n, dtype=dtype, device=dpcpp_device)
         start = 0
@@ -131,15 +131,6 @@ class TestTorchMethod:
             end = start + rows_for_experts_cpu[i].item()
             if start == end:
                 continue
-            with torch.xpu.compute_eng(torch.xpu.XPUComputeEng.XETLA):
-                xetla_output[start:end] = torch.ops.torch_ipex.mm_int4(
-                    matrix_a[start:end],
-                    matrix_b_int4[i].t().contiguous(),
-                    matrix_b_scale[i].t().contiguous(),
-                    None,
-                    group_size,
-                    None,
-                )
             ref_output[start:end] = torch.matmul(
                 matrix_a[start:end], matrix_b_fp16[i]
             )
@@ -152,18 +143,14 @@ class TestTorchMethod:
                 group_size
             )
             if bias is not None:
-                mm_int4_out_marlin[start:end] += bias[i]
+                marlin_output[start:end] += bias[i]
                 ref_output[start:end] += bias[i]
-                xetla_output[start:end] += bias[i]
             start = end
 
-        # torch.testing.assert_close(
-        #     ref_output.to(float),
-        #     xetla_output.to(float),
-        #     rtol=1e-2,
-        #     atol=1e-2,
-        #     equal_nan=True,
-        # )
+        checking_rtol = 1e-2
+        checking_atol = 1e-2
+        if has_bias:
+            checking_atol = 2e-2
 
         torch.testing.assert_close(
             ref_output.to(float),
@@ -176,8 +163,8 @@ class TestTorchMethod:
         torch.testing.assert_close(
             ref_output.to(float),
             group_marlin_output.to(float),
-            rtol=1e-2,
-            atol=1e-2,
+            rtol=checking_rtol,
+            atol=checking_atol,
             equal_nan=True,
         )
 

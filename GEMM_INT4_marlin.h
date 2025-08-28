@@ -89,6 +89,7 @@ cgfs_t XETLA_KERNEL_API group_hgemm_wint4_marlin(
     const dtype_b* b,
     const dtype_zp* b_zp,
     const dtype_scale* b_scale,
+    const dtype_a* bias,
     const float* acc_buf,
     const uint32_t* cnt_buf,
     const int* total_rows_for_each_expert,
