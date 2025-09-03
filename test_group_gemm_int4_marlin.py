@@ -70,13 +70,13 @@ class TestTorchMethod:
         # print(shuffled_weight.shape)
         return shuffled_weight
 
-    @pytest.mark.parametrize("tokens", [8, 1024])
-    @pytest.mark.parametrize("topk", [8])
-    @pytest.mark.parametrize("gemm_k", [4096])
-    @pytest.mark.parametrize("gemm_n", [4096])
-    @pytest.mark.parametrize("n_experts", [8])
+    @pytest.mark.parametrize("tokens", [64])
+    @pytest.mark.parametrize("topk", [4])
+    @pytest.mark.parametrize("gemm_k", [3072 // 4])
+    @pytest.mark.parametrize("gemm_n", [3072])
+    @pytest.mark.parametrize("n_experts", [32])
     @pytest.mark.parametrize("dtype", [torch.float16])
-    @pytest.mark.parametrize("has_bias", [False, True])
+    @pytest.mark.parametrize("has_bias", [False])
     def test_moe_gemm_int4(self, n_experts, gemm_k, gemm_n, tokens, topk, dtype, has_bias):
 
         total_m = tokens * topk

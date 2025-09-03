@@ -72,6 +72,38 @@ group_hgemm_wint4_marlin<fp16, uint32_t, fp16, uint32_t, fp16, GEMV>(
     const uint32_t k);
 
 template cgfs_t XETLA_KERNEL_API
+group_hgemm_wint4_marlin<fp16, uint32_t, fp16, uint32_t, fp16, GEMV_16>(
+    fp16* out,
+    const fp16* a,
+    const uint32_t* b,
+    const uint32_t* b_zp,
+    const fp16* b_scale,
+    const fp16* bias,
+    const float* acc_buf,
+    const uint32_t* cnt_buf,
+    const int* total_rows_for_each_expert,
+    const int* total_rows_for_each_expert_h,
+    const int expert_num,
+    const uint32_t n,
+    const uint32_t k);
+
+template cgfs_t XETLA_KERNEL_API
+group_hgemm_wint4_marlin<fp16, uint32_t, fp16, uint32_t, fp16, GEMV_32>(
+    fp16* out,
+    const fp16* a,
+    const uint32_t* b,
+    const uint32_t* b_zp,
+    const fp16* b_scale,
+    const fp16* bias,
+    const float* acc_buf,
+    const uint32_t* cnt_buf,
+    const int* total_rows_for_each_expert,
+    const int* total_rows_for_each_expert_h,
+    const int expert_num,
+    const uint32_t n,
+    const uint32_t k);
+
+template cgfs_t XETLA_KERNEL_API
 group_hgemm_wint4_marlin<fp16, uint32_t, fp16, uint32_t, fp16, GEMVKSlice>(
     fp16* out,
     const fp16* a,

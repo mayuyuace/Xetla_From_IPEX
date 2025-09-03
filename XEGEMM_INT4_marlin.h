@@ -105,34 +105,44 @@ void launch_group_hgemm_wint4_marlin(
     const uint32_t n,
     const uint32_t k) {
   auto& q = dpcppGetCurrentQueue();
-  if (average_m <= 8) {
-    if (n <= 4096) {
-      auto cgfs = group_hgemm_wint4_marlin<
-          dtype_a,
-          dtype_b,
-          dtype_c,
-          dtype_zp,
-          dtype_scale,
-          GEMVKSlice>(
-            out, a, b, b_zp, b_scale, bias, acc_buf_ptr, cnt_buf_ptr,
-            total_rows_for_each_expert,
-            total_rows_for_each_expert_h,
-            expert_num, n, k);
-      DPCPP_Q_SUBMIT_CGFS(q, cgfs);
-    } else {
-      auto cgfs = group_hgemm_wint4_marlin<
-          dtype_a,
-          dtype_b,
-          dtype_c,
-          dtype_zp,
-          dtype_scale,
-          GEMV>(out, a, b, b_zp, b_scale, bias, acc_buf_ptr, cnt_buf_ptr,
-            total_rows_for_each_expert,
-            total_rows_for_each_expert_h,
-            expert_num, n, k);
-      DPCPP_Q_SUBMIT_CGFS(q, cgfs);
-    }
-  } else {
+
+  if(average_m <= 4){
+    auto cgfs = group_hgemm_wint4_marlin<
+        dtype_a,
+        dtype_b,
+        dtype_c,
+        dtype_zp,
+        dtype_scale,
+        GEMV>(out, a, b, b_zp, b_scale, bias, acc_buf_ptr, cnt_buf_ptr,
+          total_rows_for_each_expert,
+          total_rows_for_each_expert_h,
+          expert_num, n, k);
+    DPCPP_Q_SUBMIT_CGFS(q, cgfs);
+  }else if(average_m <= 32){
+    auto cgfs = group_hgemm_wint4_marlin<
+        dtype_a,
+        dtype_b,
+        dtype_c,
+        dtype_zp,
+        dtype_scale,
+        GEMV_16>(out, a, b, b_zp, b_scale, bias, acc_buf_ptr, cnt_buf_ptr,
+          total_rows_for_each_expert,
+          total_rows_for_each_expert_h,
+          expert_num, n, k);
+    DPCPP_Q_SUBMIT_CGFS(q, cgfs);
+  }else if(average_m <= 128){
+    auto cgfs = group_hgemm_wint4_marlin<
+        dtype_a,
+        dtype_b,
+        dtype_c,
+        dtype_zp,
+        dtype_scale,
+        GEMV_32>(out, a, b, b_zp, b_scale, bias, acc_buf_ptr, cnt_buf_ptr,
+          total_rows_for_each_expert,
+          total_rows_for_each_expert_h,
+          expert_num, n, k);
+    DPCPP_Q_SUBMIT_CGFS(q, cgfs);
+  }else{
     auto cgfs = group_hgemm_wint4_marlin<
         dtype_a,
         dtype_b,

@@ -31,6 +31,31 @@ class GEMV : public base_config {
   static constexpr size_t global_kslicing = 1;
 };
 
+class GEMV_16 : public base_config {
+ public:
+  static constexpr uint32_t prefetch_distance = 6;
+  static constexpr size_t wg_m = 16;
+  static constexpr size_t wg_n = 64;
+  static constexpr size_t sg_m = 16;
+  static constexpr size_t sg_n = 16;
+  static constexpr size_t sg_k = 32;
+  static constexpr size_t local_kslicing = 1;
+  static constexpr size_t global_kslicing = 1;
+};
+
+class GEMV_32 : public base_config {
+ public:
+  static constexpr uint32_t prefetch_distance = 6;
+  static constexpr size_t wg_m = 32;
+  static constexpr size_t wg_n = 64;
+  static constexpr size_t sg_m = 32;
+  static constexpr size_t sg_n = 16;
+  static constexpr size_t sg_k = 32;
+  static constexpr size_t local_kslicing = 1;
+  static constexpr size_t global_kslicing = 1;
+};
+
+
 class GEMVKSlice : public base_config {
  public:
   static constexpr uint32_t prefetch_distance = 6;

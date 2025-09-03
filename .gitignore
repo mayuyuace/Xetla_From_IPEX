@@ -5,3 +5,4 @@ cscope
 mm_int4_out_marlin.so
 __pycache__
 build.log
+run.log

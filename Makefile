@@ -6,7 +6,7 @@ AOTFLAGS = -Xsycl-target-backend=spir64_gen "-device bmg-g21-a0 -options '-doubl
 
 BINDFLAGS = -DTORCH_EXTENSION_NAME=mm_int4_out_marlin
 
-TORCH_DIR = /home2/qiming/workspace/pytorch/torch
+TORCH_DIR = /home/qiming/workspace/pytorch/torch
 LIB_DIR := $(TORCH_DIR)/lib
 
 ESIMD_PATH = $(CMPLR_ROOT)/include/sycl
@@ -16,7 +16,7 @@ CXXOPTS_PATH = $(CURDIR)/cxxopts
 INCLUDES = -I. -I$(CXXOPTS_PATH)/include -I$(TORCH_DIR)/include -I$(TORCH_DIR)/include/torch/csrc/api/include -I$(ESIMD_PATH) -I$(PYTHON_PATH)
 LIBS = -L$(LIB_DIR) -ltorch_python -ltorch -ltorch_xpu -ltorch_cpu -lc10 -lc10_xpu -Wl,-rpath,$(LIB_DIR)
 
-IPEX_XETLA_DIR = /home2/qiming/workspace/ep/ipex/csrc/gpu/aten/operators/xetla/kernels
+IPEX_XETLA_DIR = /home/qiming/workspace/ipex/csrc/gpu/aten/operators/xetla/kernels
 XETLA_INCLUDES = -I$(IPEX_XETLA_DIR)/include -I$(IPEX_XETLA_DIR)
 
 SRC = group_gemm_int4_marlin_impl.cpp XEGEMM_INT4_marlin.cpp gemm_int4_marlin_impl.cpp

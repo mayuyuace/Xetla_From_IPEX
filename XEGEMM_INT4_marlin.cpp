@@ -199,29 +199,38 @@ static void group_mm_int4_out_marlin(
   size_t cnt_size;
   const int* rows_for_experts_host_ptr =
       reinterpret_cast<int*>(rows_for_experts_host.data_ptr());
-  if (average_m <= 8) {
-    if (n <= 4096) {
-      static constexpr uint32_t wg_m = GEMVKSlice::wg_m;
-      static constexpr uint32_t wg_n = GEMVKSlice::wg_n;
-      static constexpr uint32_t sg_m = GEMVKSlice::sg_m;
-      static constexpr uint32_t sg_n = GEMVKSlice::sg_n;
-      static constexpr uint32_t local_kslicing = GEMVKSlice::local_kslicing;
-      cnt_size = get_cnt_size<wg_m, wg_n, sg_m, sg_n, local_kslicing>(rows_for_experts_host_ptr, experts_num, n);
-    } else {
-      static constexpr uint32_t wg_m = GEMV::wg_m;
-      static constexpr uint32_t wg_n = GEMV::wg_n;
-      static constexpr uint32_t sg_m = GEMV::sg_m;
-      static constexpr uint32_t sg_n = GEMV::sg_n;
-      static constexpr uint32_t local_kslicing = GEMV::local_kslicing;
-      cnt_size = get_cnt_size<wg_m, wg_n, sg_m, sg_n, local_kslicing>(rows_for_experts_host_ptr, experts_num, n);
-    }
+  if (average_m <= 4) {
+    static constexpr uint32_t wg_m = GEMV::wg_m;
+    static constexpr uint32_t wg_n = GEMV::wg_n;
+    static constexpr uint32_t sg_m = GEMV::sg_m;
+    static constexpr uint32_t sg_n = GEMV::sg_n;
+    static constexpr uint32_t local_kslicing = GEMV::local_kslicing;
+    cnt_size = get_cnt_size<wg_m, wg_n, sg_m, sg_n, local_kslicing>(
+        rows_for_experts_host_ptr, experts_num, n);
+  } else if (average_m <= 32) {
+    static constexpr uint32_t wg_m = GEMV_16::wg_m;
+    static constexpr uint32_t wg_n = GEMV_16::wg_n;
+    static constexpr uint32_t sg_m = GEMV_16::sg_m;
+    static constexpr uint32_t sg_n = GEMV_16::sg_n;
+    static constexpr uint32_t local_kslicing = GEMV_16::local_kslicing;
+    cnt_size = get_cnt_size<wg_m, wg_n, sg_m, sg_n, local_kslicing>(
+        rows_for_experts_host_ptr, experts_num, n);
+  } else if (average_m <= 128) {
+    static constexpr uint32_t wg_m = GEMV_32::wg_m;
+    static constexpr uint32_t wg_n = GEMV_32::wg_n;
+    static constexpr uint32_t sg_m = GEMV_32::sg_m;
+    static constexpr uint32_t sg_n = GEMV_32::sg_n;
+    static constexpr uint32_t local_kslicing = GEMV_32::local_kslicing;
+    cnt_size = get_cnt_size<wg_m, wg_n, sg_m, sg_n, local_kslicing>(
+        rows_for_experts_host_ptr, experts_num, n);
   } else {
     static constexpr uint32_t wg_m = GEMM::wg_m;
     static constexpr uint32_t wg_n = GEMM::wg_n;
     static constexpr uint32_t sg_m = GEMM::sg_m;
     static constexpr uint32_t sg_n = GEMM::sg_n;
     static constexpr uint32_t local_kslicing = GEMM::local_kslicing;
-    cnt_size = get_cnt_size<wg_m, wg_n, sg_m, sg_n, local_kslicing>(rows_for_experts_host_ptr, experts_num, n);
+    cnt_size = get_cnt_size<wg_m, wg_n, sg_m, sg_n, local_kslicing>(
+        rows_for_experts_host_ptr, experts_num, n);
   }
 
   torch::Tensor acc_tensor = torch::empty(
