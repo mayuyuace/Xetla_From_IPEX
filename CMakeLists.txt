@@ -40,7 +40,7 @@ execute_process(
 
 set(LIB_DIR "${TORCH_DIR}/lib")
 set(ESIMD_PATH "$ENV{CMPLR_ROOT}/include/sycl")
-set(IPEX_XETLA_DIR "/home/baodi/mount_space/origin_ipex/csrc/gpu/aten/operators/xetla/kernels")
+set(IPEX_XETLA_DIR "/home2/qiming/workspace/680/ipex_2_10/csrc/gpu/aten/operators/xetla/kernels")
 
 set(TORCH_LIBRARIES
     torch_python
@@ -56,10 +56,7 @@ set(TORCH_LIBRARIES
 # ============================================================
 include_directories(
     ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/paged_attention_reduce
-    ${PROJECT_SOURCE_DIR}/paged_attention_loop
-    ${PROJECT_SOURCE_DIR}/paged_attention_fp8_loop
-    ${PROJECT_SOURCE_DIR}/paged_attention_fp8_reduce
+    ${PROJECT_SOURCE_DIR}/grouped_gemm_mxfp4
     ${TORCH_DIR}/include
     ${TORCH_DIR}/include/torch/csrc/api/include
     ${ESIMD_PATH}
@@ -82,7 +79,4 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIB_OUTPUT_DIR})
 
 link_directories(${LIB_DIR})
 
-add_subdirectory(paged_attention_reduce)
-add_subdirectory(paged_attention_loop)
-add_subdirectory(paged_attention_fp8_loop)
-add_subdirectory(paged_attention_fp8_reduce)
+add_subdirectory(grouped_gemm_mxfp4)
